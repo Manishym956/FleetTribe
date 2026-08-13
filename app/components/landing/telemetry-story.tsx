@@ -348,7 +348,9 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
   const activeStepRef = useRef(0);
 
   const scrollDuration = () =>
-    typeof window !== "undefined" ? window.innerHeight * 2.2 : 1600;
+    typeof window !== "undefined"
+      ? (steps.length - 1) * window.innerHeight * 0.32
+      : 1200;
 
   const goToStep = useCallback((i: number) => {
     const clamped = Math.max(0, Math.min(steps.length - 1, i));
@@ -395,7 +397,7 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
           storyPinTrigger.current = ScrollTrigger.create({
             id: "story-pin",
             trigger: track,
-            start: "top top+=9rem",
+            start: "top top+=10rem",
             end: () => `+=${scrollDuration()}`,
             pin,
             pinSpacing: true,
@@ -475,7 +477,7 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
       <div className="hidden md:block max-w-6xl mx-auto px-6 pb-12">
         <div ref={scrollTrackRef}>
           {/* Pinned row: left text + right panel — scroll distance set in GSAP `end` */}
-          <div ref={pinTargetRef} className="flex gap-16 xl:gap-20 items-start z-[1] pt-2">
+          <div ref={pinTargetRef} className="flex gap-16 xl:gap-20 items-start z-[1] pt-4">
             {/* Left: active step text */}
             <div className="w-[40%] shrink-0 pt-4">
               <div ref={leftTextRef}>
