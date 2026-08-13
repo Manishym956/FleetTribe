@@ -100,7 +100,7 @@ function AuthContent() {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading || !configured}
-            className="group w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl border border-border bg-background text-[14px] font-semibold text-foreground hover:bg-[oklch(0.975_0_0)] hover:border-foreground/20 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl border border-border bg-foreground text-background text-[14px] font-semibold hover:opacity-80 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>

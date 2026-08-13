@@ -7,7 +7,6 @@ import { LayoutDashboard, Users, Car, BookOpen, LogOut, Menu, X } from "lucide-r
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { useRouter } from "next/navigation";
 
 const NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -57,7 +56,6 @@ function NavLinks({
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -66,10 +64,11 @@ export default function AppSidebar() {
         const supabase = createClient();
         await supabase.auth.signOut();
       } catch {
-        // Supabase unavailable — still redirect to auth
+        // Supabase unavailable — still redirect home
       }
     }
-    router.push("/auth");
+    // Full navigation so middleware picks up cleared session cookies
+    window.location.assign("/");
   };
 
   return (
