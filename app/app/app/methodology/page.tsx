@@ -106,7 +106,7 @@ export default function MethodologyPage() {
                 <div className="shrink-0 w-11 h-11 rounded-full border border-border bg-background flex items-center justify-center z-10 text-[11px] font-bold text-muted-foreground">
                   {step.num}
                 </div>
-                <div className="flex-1 rounded-xl border border-border p-5">
+                <div className="flex-1 ft-card p-5">
                   <h3 className="text-[14px] font-semibold mb-1">{step.title}</h3>
                   <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">{step.desc}</p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
@@ -127,10 +127,10 @@ export default function MethodologyPage() {
       {/* Sensitivity analysis table */}
       <div className="mb-10">
         <h2 className="text-[13px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">Sensitivity Analysis</h2>
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="ft-card overflow-hidden">
           <table className="w-full text-[12.5px]">
             <thead>
-              <tr className="border-b border-border bg-[oklch(0.98_0_0)]">
+              <tr className="border-b border-border ft-surface-header">
                 {["Run", "Speed", "Accel", "Gyro", "Variability", "Spearman ρ", "Avg Rank Shift"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-muted-foreground tracking-widest uppercase">{h}</th>
                 ))}
@@ -158,7 +158,7 @@ export default function MethodologyPage() {
         <h2 className="text-[13px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">Analytical Assumptions</h2>
         <div className="space-y-3">
           {ASSUMPTIONS.map((a, i) => (
-            <div key={i} className="flex gap-3 p-4 rounded-xl border border-border bg-[oklch(0.99_0.005_60)] border-[oklch(0.88_0.06_60)]">
+            <div key={i} className="flex gap-3 p-4 ft-card ft-assumption-surface">
               <span className="shrink-0 text-[10.5px] font-bold text-[oklch(0.55_0.14_60)] mt-0.5">ASSUMPTION</span>
               <p className="text-[13px] text-foreground/80 leading-relaxed">{a}</p>
             </div>
@@ -169,7 +169,7 @@ export default function MethodologyPage() {
       {/* Limitations */}
       <div className="mb-8">
         <h2 className="text-[13px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">Limitations</h2>
-        <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+        <div className="ft-card overflow-hidden divide-y divide-border">
           {LIMITATIONS.map((l, i) => (
             <div key={i} className="flex gap-3 px-5 py-4">
               <span className="shrink-0 text-[10.5px] font-bold text-[oklch(0.50_0.19_25)] mt-0.5">LIMIT</span>
@@ -177,14 +177,6 @@ export default function MethodologyPage() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="rounded-xl border border-border p-5 bg-[oklch(0.985_0_0)]">
-        <p className="text-[12.5px] text-muted-foreground">
-          This methodology document describes the FleetTribe analytical pipeline developed as part of the{" "}
-          <strong className="font-semibold text-foreground">VexarDrive Technologies Data Science Intern Assignment</strong>.
-          All scores are decision-support signals and should be interpreted with domain expertise.
-        </p>
       </div>
     </div>
   );

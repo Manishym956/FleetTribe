@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV_LINKS = [
   { label: "Overview", href: "/" },
@@ -64,7 +65,8 @@ export default function Navbar() {
         </div>
 
         {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-1.5">
+          <ThemeToggle compact />
           <Link
             href="/auth"
             className="px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-150"
@@ -110,6 +112,9 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="mt-2 pt-2.5 border-t border-border/60 flex flex-col gap-1">
+            <div className="px-3 py-1">
+              <ThemeToggle />
+            </div>
             <Link
               href="/auth"
               role="menuitem"

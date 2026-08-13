@@ -1,7 +1,27 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isAppRoute = pathname === '/app' || pathname.startsWith('/app/');
+  const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/');
+
+  // Supabase not configured — skip auth client, avoid runtime crash
+  if (!isSupabaseConfigured()) {
+    // Development: allow dashboard preview without OAuth
+    if (process.env.NODE_ENV === 'development' && isAppRoute) {
+      return NextResponse.next();
+    }
+    if (isAppRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth';
+      url.searchParams.set('setup', 'required');
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -32,10 +52,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
-  const isAppRoute = pathname === '/app' || pathname.startsWith('/app/');
-  const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/');
 
   if (isAppRoute && !user) {
     const url = request.nextUrl.clone();

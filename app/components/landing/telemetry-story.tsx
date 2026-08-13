@@ -6,15 +6,24 @@ import { getHealthBadgeClass } from "@/lib/types";
 
 const PANEL_HEIGHT = 560;
 
+// Precomputed bar heights — avoids SSR/client Math precision hydration mismatch
+const SEED = [
+  0.72, 0.45, 0.88, 0.31, 0.65, 0.92, 0.38, 0.78, 0.55, 0.82, 0.29, 0.67, 0.94,
+  0.41, 0.73, 0.58, 0.86, 0.33, 0.76, 0.49, 0.91, 0.37, 0.62, 0.85, 0.44, 0.79,
+  0.53, 0.68, 0.95, 0.26, 0.71, 0.87, 0.42, 0.64, 0.93, 0.35, 0.77, 0.51, 0.88, 0.6,
+];
+
+function pct(n: number): string {
+  return `${Math.round(n * 10) / 10}%`;
+}
+
+const SPEED_BAR_HEIGHTS = SEED.map((v) => pct((0.35 + v * 0.65) * 100));
+const ACCEL_BAR_HEIGHTS = SEED.map((v, i) => pct((0.1 + Math.abs(Math.sin(i * 0.7) * v) * 0.9) * 100));
+const GYRO_BAR_HEIGHTS = SEED.map((v, i) => pct((0.05 + Math.abs(Math.cos(i * 1.1) * v * 0.7)) * 100));
+
 // ─── STORY PANEL VISUALS ─────────────────────────────────
 
 function TelemetryPanel() {
-  const seed = [
-    0.72, 0.45, 0.88, 0.31, 0.65, 0.92, 0.38, 0.78, 0.55, 0.82, 0.29, 0.67, 0.94,
-    0.41, 0.73, 0.58, 0.86, 0.33, 0.76, 0.49, 0.91, 0.37, 0.62, 0.85, 0.44, 0.79,
-    0.53, 0.68, 0.95, 0.26, 0.71, 0.87, 0.42, 0.64, 0.93, 0.35, 0.77, 0.51, 0.88, 0.6,
-  ];
-
   return (
     <div className="flex flex-col gap-7 h-full justify-center">
       <div className="flex items-baseline gap-3">
@@ -27,12 +36,8 @@ function TelemetryPanel() {
           Speed · km/h
         </p>
         <div className="flex items-end gap-[3px] h-14">
-          {seed.map((v, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-sm bg-foreground/[0.14]"
-              style={{ height: `${(0.35 + v * 0.65) * 100}%` }}
-            />
+          {SPEED_BAR_HEIGHTS.map((h, i) => (
+            <div key={i} className="flex-1 rounded-sm bg-foreground/[0.14]" style={{ height: h }} />
           ))}
         </div>
       </div>
@@ -42,16 +47,9 @@ function TelemetryPanel() {
           Acceleration · g
         </p>
         <div className="flex items-end gap-[3px] h-10">
-          {seed.map((v, i) => {
-            const val = Math.abs(Math.sin(i * 0.7) * v);
-            return (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-foreground/[0.10]"
-                style={{ height: `${(0.1 + val * 0.9) * 100}%` }}
-              />
-            );
-          })}
+          {ACCEL_BAR_HEIGHTS.map((h, i) => (
+            <div key={i} className="flex-1 rounded-sm bg-foreground/[0.10]" style={{ height: h }} />
+          ))}
         </div>
       </div>
 
@@ -60,16 +58,9 @@ function TelemetryPanel() {
           Gyroscope · dps
         </p>
         <div className="flex items-end gap-[3px] h-7">
-          {seed.map((v, i) => {
-            const val = Math.abs(Math.cos(i * 1.1) * v * 0.7);
-            return (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-foreground/[0.07]"
-                style={{ height: `${(0.05 + val) * 100}%` }}
-              />
-            );
-          })}
+          {GYRO_BAR_HEIGHTS.map((h, i) => (
+            <div key={i} className="flex-1 rounded-sm bg-foreground/[0.07]" style={{ height: h }} />
+          ))}
         </div>
       </div>
 
@@ -138,7 +129,7 @@ function DriverBehaviourPanel({ driver }: { driver: DriverFeature }) {
                 </div>
                 <span className="text-[14px] font-bold tabular-nums">{Math.round(c.score)}</span>
               </div>
-              <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${c.score}%`, background: color }} />
               </div>
             </div>
@@ -170,7 +161,7 @@ function RiskScoringPanel({ driver }: { driver: DriverFeature }) {
               className={`rounded-xl border px-4 py-3 ${
                 i === steps.length - 1
                   ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-[oklch(0.985_0_0)]"
+                  : "border-border bg-muted"
               }`}
             >
               <p className="text-[13.5px] font-semibold">{step.label}</p>
@@ -246,7 +237,7 @@ function VehicleHealthPanel({ vehicle }: { vehicle: VehicleFeature }) {
                 <span className="text-[13px] font-medium">{s.label}</span>
                 <span className="text-[14px] font-bold tabular-nums">{Math.round(s.score)}</span>
               </div>
-              <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${s.score}%`, background: color }} />
               </div>
             </div>
@@ -265,7 +256,7 @@ function VehicleHealthPanel({ vehicle }: { vehicle: VehicleFeature }) {
           </div>
           <div>
             <span className="text-muted-foreground">Odometer</span>
-            <p className="font-medium">{vehicle.Odometer_KM_Start_of_Week.toLocaleString()} km</p>
+            <p className="font-medium">{vehicle.Odometer_KM_Start_of_Week.toLocaleString("en-US")} km</p>
           </div>
         </div>
         <p className="text-[11px] text-muted-foreground italic">
@@ -283,17 +274,17 @@ function ExplainabilityPanel({ driver }: { driver: DriverFeature }) {
         Why is this flagged?
       </p>
 
-      <div className="rounded-xl border border-border px-5 py-4 bg-[oklch(0.985_0_0)]">
-        <p className="text-[13.5px] font-medium leading-relaxed text-foreground/85">
+      <div className="rounded-xl border border-border px-5 py-4 story-panel-inset">
+        <p className="text-[13.5px] font-medium leading-relaxed text-foreground">
           {driver.explanation}
         </p>
       </div>
 
       <div className="space-y-2">
         {driver.top_factors.map((f, i) => (
-          <div key={i} className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-background">
+          <div key={i} className="flex items-start gap-3 px-4 py-3 rounded-xl border border-border bg-card">
             <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[oklch(0.52_0.19_25)] shrink-0" />
-            <span className="text-[13px] font-medium leading-snug">{f}</span>
+            <span className="text-[13px] font-medium leading-snug text-foreground">{f}</span>
           </div>
         ))}
       </div>
@@ -350,12 +341,15 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const pinTargetRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const leftTextRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const gsapCtx = useRef<{ revert: () => void } | null>(null);
   const prevStepRef = useRef(0);
   const reducedMotion = useRef(false);
+  const isFirstTextRender = useRef(true);
 
   const goToStep = useCallback((i: number) => {
+    setActiveStep(i);
     const el = stepRefs.current[i];
     el?.scrollIntoView({ behavior: reducedMotion.current ? "auto" : "smooth", block: "center" });
   }, []);
@@ -413,6 +407,8 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
             });
           });
         });
+
+        ScrollTrigger.refresh();
       }, sectionRef);
     };
 
@@ -423,6 +419,41 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Float-in animation for sticky left text when step changes
+  useEffect(() => {
+    let cancelled = false;
+
+    const animateLeftText = async () => {
+      const el = leftTextRef.current;
+      if (!el || cancelled) return;
+
+      if (isFirstTextRender.current) {
+        isFirstTextRender.current = false;
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+        return;
+      }
+
+      if (reducedMotion.current) {
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+        return;
+      }
+
+      const { gsap } = await import("gsap");
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 32 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", overwrite: true }
+      );
+    };
+
+    animateLeftText();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStep]);
+
   // Panel crossfade on step change
   useEffect(() => {
     let cancelled = false;
@@ -431,41 +462,41 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
       const { gsap } = await import("gsap");
       if (cancelled) return;
 
-      const prev = panelRefs.current[prevStepRef.current];
       const next = panelRefs.current[activeStep];
       if (!next) return;
 
+      panelRefs.current.forEach((el, i) => {
+        if (!el || i === activeStep) return;
+        el.style.pointerEvents = "none";
+        el.style.visibility = "hidden";
+        el.style.opacity = "0";
+        el.style.zIndex = "1";
+      });
+
       if (reducedMotion.current) {
-        panelRefs.current.forEach((el, i) => {
-          if (!el) return;
-          el.style.opacity = i === activeStep ? "1" : "0";
-          el.style.pointerEvents = i === activeStep ? "auto" : "none";
-        });
+        next.style.opacity = "1";
+        next.style.visibility = "visible";
+        next.style.pointerEvents = "auto";
+        next.style.zIndex = "2";
         prevStepRef.current = activeStep;
         return;
       }
 
-      gsap.set(next, { opacity: 0, y: 6, pointerEvents: "none" });
-      gsap.to(next, {
-        opacity: 1,
-        y: 0,
-        duration: 0.35,
-        ease: "power2.out",
-        onStart: () => {
-          next.style.pointerEvents = "auto";
-        },
-      });
-
-      if (prev && prev !== next) {
-        gsap.to(prev, {
-          opacity: 0,
-          duration: 0.2,
-          ease: "power2.in",
-          onComplete: () => {
-            prev.style.pointerEvents = "none";
+      next.style.visibility = "visible";
+      next.style.zIndex = "2";
+      gsap.fromTo(
+        next,
+        { opacity: 0, y: 6 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.35,
+          ease: "power2.out",
+          onStart: () => {
+            next.style.pointerEvents = "auto";
           },
-        });
-      }
+        }
+      );
 
       prevStepRef.current = activeStep;
     };
@@ -476,21 +507,25 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
     };
   }, [activeStep]);
 
-  // Initial panel visibility
+  // Initial panel state
   useEffect(() => {
     panelRefs.current.forEach((el, i) => {
       if (!el) return;
       el.style.opacity = i === 0 ? "1" : "0";
+      el.style.visibility = i === 0 ? "visible" : "hidden";
       el.style.pointerEvents = i === 0 ? "auto" : "none";
+      el.style.zIndex = i === 0 ? "2" : "1";
     });
   }, []);
+
+  const currentStep = steps[activeStep];
 
   return (
     <section
       id="story"
       ref={sectionRef}
       aria-label="How FleetTribe works"
-      className="relative bg-background"
+      className="relative"
     >
       <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
         <p className="section-label mb-3">How it works</p>
@@ -502,54 +537,34 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
 
       {/* Desktop: pinned storytelling */}
       <div className="hidden md:block max-w-6xl mx-auto px-6 pb-48">
-        <div className="flex gap-16 xl:gap-20 items-start">
-          {/* Left: scrollable step nav (~40%) */}
-          <div ref={leftColumnRef} className="w-[40%] flex flex-col shrink-0">
-            {steps.map((step, i) => (
-              <div
-                key={step.num}
-                ref={(el) => {
-                  stepRefs.current[i] = el;
-                }}
-                className="py-[4.5rem] cursor-pointer"
-                onClick={() => goToStep(i)}
-              >
-                <p
-                  className={`text-[11px] font-semibold tracking-[0.08em] uppercase mb-2 transition-colors duration-300 ${
-                    activeStep === i ? "text-muted-foreground" : "text-muted-foreground/40"
-                  }`}
-                >
-                  {step.num}
+        <div ref={leftColumnRef}>
+          {/* Pinned row: left text + right panel stay fixed while spacers scroll */}
+          <div ref={pinTargetRef} className="flex gap-16 xl:gap-20 items-start">
+            {/* Left: active step text */}
+            <div className="w-[40%] shrink-0 pt-4">
+              <div ref={leftTextRef} key={activeStep}>
+                <p className="text-[11px] font-semibold tracking-[0.08em] uppercase mb-2 text-muted-foreground">
+                  {currentStep.num}
                 </p>
-                <h3
-                  className={`text-[28px] font-bold tracking-[-0.025em] mb-2.5 transition-all duration-300 ${
-                    activeStep === i ? "text-foreground" : "text-foreground/20"
-                  }`}
-                >
-                  {step.title}
+                <h3 className="text-[28px] font-bold tracking-[-0.025em] mb-2.5 text-foreground">
+                  {currentStep.title}
                 </h3>
-                <p
-                  className={`text-[14px] leading-relaxed max-w-[280px] transition-all duration-300 ${
-                    activeStep === i ? "text-muted-foreground" : "text-muted-foreground/30"
-                  }`}
-                >
-                  {step.desc}
+                <p className="text-[14px] leading-relaxed max-w-[280px] text-muted-foreground">
+                  {currentStep.desc}
                 </p>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Right: pinned visual panel (~60%) */}
-          <div className="w-[60%] shrink-0">
-            <div ref={pinTargetRef}>
+            {/* Right: visual panel */}
+            <div className="w-[60%] shrink-0">
               <div
                 className="preview-card overflow-hidden"
                 style={{ height: PANEL_HEIGHT }}
               >
                 <div className="h-full flex flex-col">
-                  <div className="px-7 py-4 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)] flex items-center justify-between shrink-0">
+                  <div className="px-7 py-4 border-b story-panel-header flex items-center justify-between shrink-0">
                     <p className="text-[11px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">
-                      {steps[activeStep].num} — {steps[activeStep].title}
+                      {currentStep.num} — {currentStep.title}
                     </p>
                     <div className="flex items-center gap-1.5">
                       {steps.map((_, i) => (
@@ -559,7 +574,7 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
                           className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                             i === activeStep
                               ? "bg-foreground scale-110"
-                              : "bg-[oklch(0.85_0_0)] hover:bg-[oklch(0.75_0_0)]"
+                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                           }`}
                           aria-label={`Go to step ${steps[i].num}`}
                         />
@@ -567,14 +582,14 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
                     </div>
                   </div>
 
-                  <div className="relative flex-1 overflow-hidden">
+                  <div className="relative flex-1 overflow-hidden bg-card">
                     {steps.map((step, i) => (
                       <div
                         key={step.num}
                         ref={(el) => {
                           panelRefs.current[i] = el;
                         }}
-                        className="absolute inset-0 px-7 py-7 overflow-auto"
+                        className="absolute inset-0 px-7 py-7 overflow-auto text-foreground"
                         aria-hidden={activeStep !== i}
                       >
                         {step.panel}
@@ -585,6 +600,19 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
               </div>
             </div>
           </div>
+
+          {/* Scroll trigger spacers — drive step changes while row stays pinned */}
+          {steps.map((step, i) => (
+            <div
+              key={step.num}
+              ref={(el) => {
+                stepRefs.current[i] = el;
+              }}
+              className="py-[4.5rem] min-h-[280px] cursor-pointer"
+              onClick={() => goToStep(i)}
+              aria-hidden="true"
+            />
+          ))}
         </div>
       </div>
 
@@ -598,12 +626,12 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
             }}
             className="preview-card overflow-hidden"
           >
-            <div className="px-5 py-3.5 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)]">
+            <div className="px-5 py-3.5 border-b story-panel-header">
               <p className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">
                 {step.num} — {step.title}
               </p>
             </div>
-            <div className="px-5 py-6 min-h-[320px]">{step.panel}</div>
+            <div className="px-5 py-6 min-h-[320px] text-foreground">{step.panel}</div>
           </div>
         ))}
       </div>

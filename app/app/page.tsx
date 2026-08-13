@@ -22,11 +22,11 @@ const vehicles = vehiclesRaw as VehicleFeature[];
 const methodology = methodologyRaw as Methodology;
 
 export default function LandingPage() {
-  const topDriver = drivers[0];   // rank 1 — highest risk
-  const topVehicle = vehicles[0]; // rank 1 — most attention needed
+  const topDriver = drivers[0];
+  const topVehicle = vehicles[0];
 
   return (
-    <>
+    <div className="landing-gradient min-h-screen">
       <Navbar />
       <main id="main-content" tabIndex={-1}>
         <Hero topDrivers={drivers} topVehicles={vehicles} />
@@ -39,6 +39,6 @@ export default function LandingPage() {
         <CTASection />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

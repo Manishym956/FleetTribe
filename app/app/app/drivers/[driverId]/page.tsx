@@ -15,7 +15,7 @@ function ScoreBar({ score }: { score: number }) {
     : score >= 35 ? "oklch(0.62 0.14 55)"
     : "oklch(0.48 0.15 145)";
   return (
-    <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+    <div className="h-1.5 ft-bar-track rounded-full overflow-hidden">
       <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
     </div>
   );
@@ -100,7 +100,7 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
       {/* Three cards */}
       <div className="grid md:grid-cols-3 gap-4 mb-7">
         {/* Profile */}
-        <div className="rounded-xl border border-border p-5">
+        <div className="ft-card p-5">
           <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase mb-3.5">Profile</h2>
           <dl className="space-y-2.5">
             {[
@@ -119,7 +119,7 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
         </div>
 
         {/* Fleet position */}
-        <div className="rounded-xl border border-border p-5 flex flex-col gap-4">
+        <div className="ft-card p-5 flex flex-col gap-4">
           <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">Fleet Position</h2>
           <div className="text-center flex-1 flex flex-col items-center justify-center gap-1">
             <p className="text-[44px] font-bold tabular-nums tracking-[-0.04em] leading-none">#{driver.rank}</p>
@@ -130,14 +130,14 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
               <span>Higher risk than</span>
               <span className="font-semibold text-foreground">{percentile}%</span>
             </div>
-            <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+            <div className="h-1.5 ft-bar-track rounded-full overflow-hidden">
               <div className="h-full bg-foreground/25 rounded-full" style={{ width: `${percentile}%` }} />
             </div>
           </div>
         </div>
 
         {/* Primary vehicle */}
-        <div className="rounded-xl border border-border p-5">
+        <div className="ft-card p-5">
           <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase mb-3.5">Primary Vehicle</h2>
           {vehicle ? (
             <div className="flex flex-col gap-2">
@@ -155,13 +155,13 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
       </div>
 
       {/* Why this matters */}
-      <div className="rounded-xl border border-border p-6 mb-5">
+      <div className="ft-card p-6 mb-5">
         <h2 className="text-[12.5px] font-semibold mb-3 tracking-[-0.01em]">Why This Matters</h2>
         <p className="text-[14px] text-muted-foreground leading-relaxed">{driver.explanation}</p>
         {driver.top_factors.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {driver.top_factors.map((f) => (
-              <span key={f} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border bg-[oklch(0.975_0_0)] text-muted-foreground">
+              <span key={f} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border bg-muted text-muted-foreground">
                 {f}
               </span>
             ))}
@@ -170,7 +170,7 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
       </div>
 
       {/* Score breakdown */}
-      <div className="rounded-xl border border-border p-6 mb-5">
+      <div className="ft-card p-6 mb-5">
         <h2 className="text-[12.5px] font-semibold mb-5 tracking-[-0.01em]">Score Breakdown</h2>
         <div className="space-y-5">
           {components.map((c, i) => (
@@ -192,7 +192,7 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
       </div>
 
       {/* Raw telemetry */}
-      <div className="rounded-xl border border-border p-6">
+      <div className="ft-card p-6">
         <h2 className="text-[12.5px] font-semibold mb-4 tracking-[-0.01em]">Trip Telemetry Summary</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
@@ -203,7 +203,7 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
             { label: "Gyro Event Rate", value: driver.mean_gyro_rate.toFixed(4) },
             { label: "Accel Variability", value: driver.accel_variability.toFixed(4) },
           ].map((s) => (
-            <div key={s.label} className="rounded-lg bg-[oklch(0.97_0_0)] p-3.5">
+            <div key={s.label} className="rounded-lg bg-muted p-3.5">
               <p className="text-[10.5px] text-muted-foreground font-medium tracking-[0.06em] uppercase mb-1.5">{s.label}</p>
               <p className="text-[14px] font-semibold tabular-nums">{s.value}</p>
             </div>

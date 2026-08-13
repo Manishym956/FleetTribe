@@ -59,7 +59,7 @@ export function ExplainabilitySection({ topDriver, methodology }: Explainability
     <section
       id="explainability"
       aria-label="Explainability"
-      className="py-28 px-6 bg-[oklch(0.988_0_0)] border-y border-border"
+      className="py-28 px-6 bg-secondary/50 border-y border-border"
     >
       <div className="max-w-4xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-start">
@@ -197,7 +197,7 @@ export function CTASection() {
     <section
       id="cta"
       aria-label="Call to action"
-      className="py-36 px-6 bg-[oklch(0.988_0_0)] border-t border-border text-center"
+      className="py-36 px-6 bg-secondary/50 border-t border-border text-center"
     >
       <div className="max-w-2xl mx-auto">
         <h2 className="text-[52px] sm:text-[64px] font-bold tracking-[-0.04em] leading-[1.03] mb-5 text-balance">

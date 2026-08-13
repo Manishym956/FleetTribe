@@ -64,7 +64,7 @@ export default function VehiclesDashboard() {
           <button
             key={k.label}
             onClick={() => setStatusFilter(statusFilter === k.key ? "All" : k.key)}
-            className={`rounded-xl border p-4 text-left transition-all cursor-pointer hover:border-foreground/30 ${
+            className={`ft-card p-4 text-left transition-all cursor-pointer hover:border-foreground/30 ${
               statusFilter === k.key ? "border-foreground" : "border-border"
             }`}
           >
@@ -98,11 +98,11 @@ export default function VehiclesDashboard() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className="ft-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-border bg-[oklch(0.98_0_0)]">
+              <tr className="border-b border-border ft-surface-header">
                 {[
                   { label: "Rank", key: "rank" as SortKey },
                   { label: "Vehicle", key: null },
@@ -129,23 +129,23 @@ export default function VehiclesDashboard() {
               {filtered.map((v) => (
                 <tr
                   key={v.Vehicle_ID}
-                  className={`border-b border-border/50 hover:bg-[oklch(0.975_0_0)] transition-colors ${v.rank === 1 ? "bg-[oklch(0.99_0.004_25)]" : ""}`}
+                  className={`border-b border-border/50 transition-colors ft-surface-row ${v.rank === 1 ? "ft-surface-row-highlight" : ""}`}
                 >
                   <td className="px-4 py-3 font-bold tabular-nums text-muted-foreground">{v.rank}</td>
                   <td className="px-4 py-3">
-                    <p className="font-semibold">{v.Make} {v.Model}</p>
+                    <p className="font-semibold text-foreground">{v.Make} {v.Model}</p>
                     <p className="text-[11px] text-muted-foreground">{v.Vehicle_ID} · {v.Vehicle_Type}</p>
                   </td>
-                  <td className="px-4 py-3 font-bold tabular-nums">{Math.round(v.health_score)}</td>
+                  <td className="px-4 py-3 font-bold tabular-nums text-foreground">{Math.round(v.health_score)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${getHealthBadgeClass(v.health_status)}`}>
                       {v.health_status === "Maintenance Attention" ? "Attention" : v.health_status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(v.anomaly_vibration)}</td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(v.anomaly_gyro)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(v.anomaly_vibration)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(v.anomaly_gyro)}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{v.Last_Service_Date}</td>
-                  <td className="px-4 py-3 tabular-nums">{v.Odometer_KM_Start_of_Week.toLocaleString()} km</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{v.Odometer_KM_Start_of_Week.toLocaleString()} km</td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/app/vehicles/${v.Vehicle_ID}`}

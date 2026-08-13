@@ -29,7 +29,7 @@ export default function DriverIntelligencePreview({ drivers }: DriverIntelligenc
     <section
       id="drivers"
       aria-label="Driver Intelligence"
-      className="py-28 px-6 border-y border-border bg-[oklch(0.988_0_0)]"
+      className="py-28 px-6 border-y border-border bg-secondary/50"
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}

@@ -65,7 +65,7 @@ export default function DriversDashboard() {
           <button
             key={k.label}
             onClick={() => setRiskFilter(riskFilter === k.label ? "All" : k.label)}
-            className={`rounded-xl border p-4 text-left transition-all cursor-pointer hover:border-foreground/30 ${
+            className={`ft-card p-4 text-left transition-all cursor-pointer hover:border-foreground/30 ${
               riskFilter === k.label ? "border-foreground" : "border-border"
             }`}
           >
@@ -99,11 +99,11 @@ export default function DriversDashboard() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className="ft-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-border bg-[oklch(0.98_0_0)]">
+              <tr className="border-b border-border ft-surface-header">
                 {[
                   { label: "Rank", key: "rank" as SortKey },
                   { label: "Driver", key: null },
@@ -130,23 +130,23 @@ export default function DriversDashboard() {
               {filtered.map((d) => (
                 <tr
                   key={d.Driver_ID}
-                  className={`border-b border-border/50 hover:bg-[oklch(0.975_0_0)] transition-colors ${d.rank === 1 ? "bg-[oklch(0.99_0.004_25)]" : ""}`}
+                  className={`border-b border-border/50 transition-colors ft-surface-row ${d.rank === 1 ? "ft-surface-row-highlight" : ""}`}
                 >
                   <td className="px-4 py-3 font-bold tabular-nums text-muted-foreground">{d.rank}</td>
                   <td className="px-4 py-3">
-                    <p className="font-semibold">{d.Driver_Name}</p>
+                    <p className="font-semibold text-foreground">{d.Driver_Name}</p>
                     <p className="text-[11px] text-muted-foreground">{d.Driver_ID} · {d.Home_Hub}</p>
                   </td>
-                  <td className="px-4 py-3 font-bold tabular-nums">{Math.round(d.risk_score)}</td>
+                  <td className="px-4 py-3 font-bold tabular-nums text-foreground">{Math.round(d.risk_score)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${getRiskBadgeClass(d.risk_level)}`}>
                       {d.risk_level}
                     </span>
                   </td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(d.score_speed)}</td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(d.score_accel)}</td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(d.score_gyro)}</td>
-                  <td className="px-4 py-3 tabular-nums">{Math.round(d.score_variability)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(d.score_speed)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(d.score_accel)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(d.score_gyro)}</td>
+                  <td className="px-4 py-3 tabular-nums text-muted-foreground">{Math.round(d.score_variability)}</td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/app/drivers/${d.Driver_ID}`}

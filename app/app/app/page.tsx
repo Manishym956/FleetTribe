@@ -22,11 +22,11 @@ function StatCard({
   warn?: boolean;
 }) {
   return (
-    <div className={`p-5 rounded-xl border ${warn ? "border-[oklch(0.87_0.07_25)] bg-[oklch(0.99_0.01_25)]" : "border-border bg-background"}`}>
+    <div className={`p-5 ft-card ${warn ? "ft-warn-surface" : ""}`}>
       <p className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase mb-2">
         {label}
       </p>
-      <p className={`text-[28px] font-bold tabular-nums tracking-[-0.03em] leading-none ${warn ? "text-[oklch(0.42_0.19_25)]" : ""}`}>
+      <p className={`text-[28px] font-bold tabular-nums tracking-[-0.03em] leading-none ${warn ? "text-[oklch(0.52_0.19_25)]" : "text-foreground"}`}>
         {value}
       </p>
       {sub && <p className="text-[11.5px] text-muted-foreground mt-1.5">{sub}</p>}
@@ -36,7 +36,7 @@ function StatCard({
 
 function DistBar({ count, total, color }: { count: number; total: number; color: string }) {
   return (
-    <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden flex-1">
+    <div className="h-1.5 ft-bar-track rounded-full overflow-hidden flex-1">
       <div
         className="h-full rounded-full"
         style={{ width: `${(count / total) * 100}%`, background: color }}
@@ -51,9 +51,8 @@ export default function FleetOverviewPage() {
 
   return (
     <div className="px-8 py-8 max-w-5xl">
-      {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-[22px] font-bold tracking-[-0.02em] mb-1">Fleet Overview</h1>
+        <h1 className="text-[22px] font-bold tracking-[-0.02em] mb-1 text-foreground">Fleet Overview</h1>
         <p className="text-[13.5px] text-muted-foreground">
           Avg driver risk{" "}
           <span className="font-semibold text-foreground">{avgRisk}/100</span>
@@ -62,7 +61,6 @@ export default function FleetOverviewPage() {
         </p>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
         <StatCard label="Total Drivers" value="30" />
         <StatCard label="Total Vehicles" value="30" />
@@ -82,10 +80,9 @@ export default function FleetOverviewPage() {
         />
       </div>
 
-      {/* Distribution bars */}
       <div className="grid md:grid-cols-2 gap-4 mb-8">
-        <div className="rounded-xl border border-border p-5">
-          <h2 className="text-[12px] font-semibold mb-4 tracking-[-0.01em]">Driver Risk Distribution</h2>
+        <div className="ft-card p-5">
+          <h2 className="text-[12px] font-semibold mb-4 tracking-[-0.01em] text-foreground">Driver Risk Distribution</h2>
           <div className="space-y-3">
             {[
               { label: "High Risk", count: fleet.drivers_by_risk_level["High Risk"], color: "oklch(0.52 0.19 25)" },
@@ -95,13 +92,13 @@ export default function FleetOverviewPage() {
               <div key={r.label} className="flex items-center gap-3">
                 <span className="text-[12px] text-muted-foreground w-26 shrink-0">{r.label}</span>
                 <DistBar count={r.count} total={30} color={r.color} />
-                <span className="text-[12px] font-bold tabular-nums w-4 text-right shrink-0">{r.count}</span>
+                <span className="text-[12px] font-bold tabular-nums w-4 text-right shrink-0 text-foreground">{r.count}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-xl border border-border p-5">
-          <h2 className="text-[12px] font-semibold mb-4 tracking-[-0.01em]">Vehicle Health Distribution</h2>
+        <div className="ft-card p-5">
+          <h2 className="text-[12px] font-semibold mb-4 tracking-[-0.01em] text-foreground">Vehicle Health Distribution</h2>
           <div className="space-y-3">
             {[
               { label: "Attention", count: fleet.vehicles_by_health_status["Maintenance Attention"], color: "oklch(0.52 0.19 25)" },
@@ -111,20 +108,19 @@ export default function FleetOverviewPage() {
               <div key={r.label} className="flex items-center gap-3">
                 <span className="text-[12px] text-muted-foreground w-20 shrink-0">{r.label}</span>
                 <DistBar count={r.count} total={30} color={r.color} />
-                <span className="text-[12px] font-bold tabular-nums w-4 text-right shrink-0">{r.count}</span>
+                <span className="text-[12px] font-bold tabular-nums w-4 text-right shrink-0 text-foreground">{r.count}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Attention tables */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-[oklch(0.985_0_0)]">
+        <div className="ft-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border ft-surface-header">
             <div className="flex items-center gap-2">
               <AlertTriangle size={13} className="text-[oklch(0.52_0.19_25)]" />
-              <h2 className="text-[12px] font-semibold">Top Risk Drivers</h2>
+              <h2 className="text-[12px] font-semibold text-foreground">Top Risk Drivers</h2>
             </div>
             <Link href="/app/drivers" className="text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
               View all <ArrowRight size={11} />
@@ -132,15 +128,18 @@ export default function FleetOverviewPage() {
           </div>
           <ul>
             {topDrivers.map((d, i) => (
-              <li key={d.Driver_ID} className={`flex items-center px-5 py-3 border-b border-border/50 last:border-0 hover:bg-[oklch(0.977_0_0)] transition-colors ${i === 0 ? "bg-[oklch(0.997_0.004_25)]" : "bg-white"}`}>
-                <span className="text-[11px] font-bold text-muted-foreground/50 w-5 shrink-0">{d.rank}</span>
+              <li
+                key={d.Driver_ID}
+                className={`flex items-center px-5 py-3 border-b border-border/50 last:border-0 transition-colors ft-surface-row ${i === 0 ? "ft-surface-row-highlight" : ""}`}
+              >
+                <span className="text-[11px] font-bold text-muted-foreground w-5 shrink-0">{d.rank}</span>
                 <div className="flex-1 min-w-0 mx-3">
-                  <Link href={`/app/drivers/${d.Driver_ID}`} className="text-[12.5px] font-semibold hover:underline truncate block">
+                  <Link href={`/app/drivers/${d.Driver_ID}`} className="text-[12.5px] font-semibold text-foreground hover:underline truncate block">
                     {d.Driver_Name}
                   </Link>
                   <p className="text-[11px] text-muted-foreground">{d.Driver_ID}</p>
                 </div>
-                <span className="text-[13px] font-bold tabular-nums mr-3">{Math.round(d.risk_score)}</span>
+                <span className="text-[13px] font-bold tabular-nums mr-3 text-foreground">{Math.round(d.risk_score)}</span>
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${getRiskBadgeClass(d.risk_level)}`}>
                   {d.risk_level === "High Risk" ? "HIGH" : d.risk_level === "Low Risk" ? "LOW" : "MOD"}
                 </span>
@@ -149,11 +148,11 @@ export default function FleetOverviewPage() {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-border overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-[oklch(0.985_0_0)]">
+        <div className="ft-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border ft-surface-header">
             <div className="flex items-center gap-2">
               <Activity size={13} className="text-[oklch(0.52_0.19_25)]" />
-              <h2 className="text-[12px] font-semibold">Vehicles Requiring Inspection</h2>
+              <h2 className="text-[12px] font-semibold text-foreground">Vehicles Requiring Inspection</h2>
             </div>
             <Link href="/app/vehicles" className="text-[11.5px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
               View all <ArrowRight size={11} />
@@ -161,15 +160,18 @@ export default function FleetOverviewPage() {
           </div>
           <ul>
             {topVehicles.map((v, i) => (
-              <li key={v.Vehicle_ID} className={`flex items-center px-5 py-3 border-b border-border/50 last:border-0 hover:bg-[oklch(0.977_0_0)] transition-colors ${i === 0 ? "bg-[oklch(0.997_0.004_25)]" : "bg-white"}`}>
-                <span className="text-[11px] font-bold text-muted-foreground/50 w-5 shrink-0">{v.rank}</span>
+              <li
+                key={v.Vehicle_ID}
+                className={`flex items-center px-5 py-3 border-b border-border/50 last:border-0 transition-colors ft-surface-row ${i === 0 ? "ft-surface-row-highlight" : ""}`}
+              >
+                <span className="text-[11px] font-bold text-muted-foreground w-5 shrink-0">{v.rank}</span>
                 <div className="flex-1 min-w-0 mx-3">
-                  <Link href={`/app/vehicles/${v.Vehicle_ID}`} className="text-[12.5px] font-semibold hover:underline truncate block">
+                  <Link href={`/app/vehicles/${v.Vehicle_ID}`} className="text-[12.5px] font-semibold text-foreground hover:underline truncate block">
                     {v.Make} {v.Model}
                   </Link>
                   <p className="text-[11px] text-muted-foreground">{v.Vehicle_ID}</p>
                 </div>
-                <span className="text-[13px] font-bold tabular-nums mr-3">{Math.round(v.health_score)}</span>
+                <span className="text-[13px] font-bold tabular-nums mr-3 text-foreground">{Math.round(v.health_score)}</span>
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${getHealthBadgeClass(v.health_status)}`}>
                   {v.health_status === "Maintenance Attention" ? "ATTN" : v.health_status === "Healthy" ? "OK" : "MON"}
                 </span>

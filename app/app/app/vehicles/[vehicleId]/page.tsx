@@ -15,7 +15,7 @@ function ScoreBar({ score }: { score: number }) {
     : score < 65 ? "oklch(0.62 0.14 55)"
     : "oklch(0.48 0.15 145)";
   return (
-    <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+    <div className="h-1.5 ft-bar-track rounded-full overflow-hidden">
       <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
     </div>
   );
@@ -73,7 +73,7 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
       {/* Three cards */}
       <div className="grid md:grid-cols-3 gap-4 mb-7">
         {/* Vehicle info — clearly labelled as contextual */}
-        <div className="rounded-xl border border-border p-5">
+        <div className="ft-card p-5">
           <div className="mb-3.5">
             <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">Vehicle Info</h2>
             <p className="text-[10px] text-muted-foreground/60 italic mt-0.5">Contextual — not scored</p>
@@ -95,7 +95,7 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
         </div>
 
         {/* Fleet position */}
-        <div className="rounded-xl border border-border p-5 flex flex-col gap-4">
+        <div className="ft-card p-5 flex flex-col gap-4">
           <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">Fleet Position</h2>
           <div className="text-center flex-1 flex flex-col items-center justify-center gap-1">
             <p className="text-[44px] font-bold tabular-nums tracking-[-0.04em] leading-none">#{vehicle.rank}</p>
@@ -106,14 +106,14 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
               <span>More abnormal than</span>
               <span className="font-semibold text-foreground">{percentile}%</span>
             </div>
-            <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+            <div className="h-1.5 ft-bar-track rounded-full overflow-hidden">
               <div className="h-full bg-foreground/25 rounded-full" style={{ width: `${percentile}%` }} />
             </div>
           </div>
         </div>
 
         {/* Assigned driver */}
-        <div className="rounded-xl border border-border p-5">
+        <div className="ft-card p-5">
           <h2 className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase mb-3.5">Primary Driver</h2>
           {driver ? (
             <div className="flex flex-col gap-2">
@@ -131,7 +131,7 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
       </div>
 
       {/* Sensor signal */}
-      <div className="rounded-xl border border-border p-6 mb-5">
+      <div className="ft-card p-6 mb-5">
         <div className="flex items-start justify-between mb-1">
           <h2 className="text-[12.5px] font-semibold tracking-[-0.01em]">Maintenance Inspection Signal</h2>
           <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground">
@@ -170,13 +170,13 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
       </div>
 
       {/* Explanation */}
-      <div className="rounded-xl border border-border p-6 mb-5">
+      <div className="ft-card p-6 mb-5">
         <h2 className="text-[12.5px] font-semibold mb-3 tracking-[-0.01em]">Sensor Signature Summary</h2>
         <p className="text-[14px] text-muted-foreground leading-relaxed">{vehicle.explanation}</p>
         {vehicle.top_signals.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {vehicle.top_signals.map((s) => (
-              <span key={s} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border bg-[oklch(0.975_0_0)] text-muted-foreground">
+              <span key={s} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border bg-muted text-muted-foreground">
                 {s}
               </span>
             ))}
@@ -185,7 +185,7 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
       </div>
 
       {/* Raw metrics */}
-      <div className="rounded-xl border border-border p-6">
+      <div className="ft-card p-6">
         <h2 className="text-[12.5px] font-semibold mb-4 tracking-[-0.01em]">Raw Sensor Metrics</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
@@ -195,7 +195,7 @@ export default function VehicleDetailPage({ params }: { params: { vehicleId: str
             { label: "Mean Gyro Speed", value: `${vehicle.mean_gyro_speed.toFixed(2)} dps` },
             { label: "Sensor Abnormality", value: `${vehicle.sensor_abnormality_score.toFixed(1)}/100` },
           ].map((s) => (
-            <div key={s.label} className="rounded-lg bg-[oklch(0.97_0_0)] p-3.5">
+            <div key={s.label} className="rounded-lg bg-muted p-3.5">
               <p className="text-[10.5px] text-muted-foreground font-medium tracking-[0.06em] uppercase mb-1.5">{s.label}</p>
               <p className="text-[14px] font-semibold tabular-nums">{s.value}</p>
             </div>
