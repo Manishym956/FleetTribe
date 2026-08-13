@@ -1,0 +1,1398 @@
+================================================================================
+  FLEETTRIBE — TECHNICAL REPORT & DOCUMENTATION
+================================================================================
+  Subtitle:    Complete Technical Reference — PRD, Implementation, Methodology,
+               Flows, API, Deployment & Production Roadmap
+  Version:     2.0
+  Date:        August 13, 2026
+  Author:      FleetTribe Engineering
+  Repository:  https://github.com/Manishym956/FleetTribe
+  Assignment:  VexarDrive Technologies — Data Science Intern Assignment
+================================================================================
+
+
+WHAT IS THIS DOCUMENT?
+----------------------
+A technical document explains the technical reality of a system — its
+architecture, implementation, methodology, decisions, validation,
+limitations, and future evolution — in enough detail that another
+technical person can understand and reproduce the work without opening
+the code first.
+
+For FleetTribe, this document answers:
+  - WHAT are we building and why?          (PRD summary)
+  - HOW does the system work end-to-end?   (pipeline → app → deploy)
+  - WHY were specific technical choices made?
+  - WHAT did we implement vs what is future scope?
+  - HOW can someone else reproduce or extend it?
+
+
+DOCUMENT MAP — HOW FLEETTRIBE DOCUMENTS RELATE
+-----------------------------------------------
+  Document                    Main Question It Answers
+  --------------------------  -----------------------------------------------
+  01_PRD.md                   What are we building and why?
+  02_TECH_STACK.md            What technologies are we using?
+  04_SYSTEM_DESIGN.md         How are all components connected?
+  03_RULES_AND_REGULATIONS.md What constraints must we follow?
+  LOGGER.md                   What decisions happened during development?
+  README.md                   How do I run and deploy it?
+  docs/TECHNICAL_REPORT.md    Full analytical system narrative (Markdown)
+  THIS FILE (.txt)            Unified technical reference for reviewers
+
+
+THE FLEETTRIBE TECHNICAL STORY (END-TO-END)
+--------------------------------------------
+  Problem
+    ↓
+  Dataset (Excel workbook)
+    ↓
+  Data ingestion (pandas, header=2)
+    ↓
+  Data validation (joins, nulls, duplicates)
+    ↓
+  Exploratory analysis & quality checks
+    ↓
+  Feature engineering (magnitudes, rates, aggregations)
+    ↓
+  Driver risk scoring (robust Z-score + weighted components)
+    ↓
+  Vehicle health scoring (sensor variance abnormality)
+    ↓
+  Sensitivity analysis & validation
+    ↓
+  JSON outputs (analysis/outputs/)
+    ↓
+  Build-time copy → app/lib/data/
+    ↓
+  Next.js application (landing + dashboards)
+    ↓
+  Supabase Google OAuth (session protection)
+    ↓
+  Vercel deployment
+    ↓
+  Limitations & assumptions (documented in UI)
+    ↓
+  Future production architecture (NOT implemented)
+
+
+TABLE OF CONTENTS
+-----------------
+  PART A — PRODUCT & REQUIREMENTS
+    1.  Executive Summary
+    2.  Product Requirements Document (PRD) Summary
+    3.  Target Users & Success Criteria
+    4.  Non-Goals & Scope Boundaries
+
+  PART B — DATA SCIENCE & ANALYTICS
+    5.  Problem Statement
+    6.  Dataset Description
+    7.  Data Architecture & Relationships
+    8.  Data Ingestion & Preprocessing
+    9.  Data Validation & Quality Assessment
+   10.  Feature Engineering
+   11.  Driver Behaviour Methodology
+   12.  Vehicle Health Methodology
+   13.  Explainability & Metric Justification
+   14.  Sensitivity Analysis & Validation
+   15.  Analytical Outputs (JSON Schema)
+   16.  Additional Dataset Use Cases
+
+  PART C — ENGINEERING & APPLICATION
+   17.  Technology Stack & Rationale
+   18.  System Architecture (Current — Implemented)
+   19.  Python → Next.js Data Bridge
+   20.  Application Structure & Routes
+   21.  User Flow
+   22.  Application Flow
+   23.  API & Server Endpoints
+   24.  Authentication & Security
+   25.  Driver Behaviour Dashboard
+   26.  Vehicle Health Dashboard
+   27.  Landing Page & Public Experience
+
+  PART D — OPERATIONS
+   28.  Environment Variables
+   29.  Build, Test & Deployment
+   30.  Engineering Rules Compliance
+   31.  Requirements Compliance Checklist
+
+  PART E — LIMITATIONS & FUTURE
+   32.  Current Limitations & Assumptions
+   33.  Future Features & Production Roadmap
+   34.  Current vs Future Capability Matrix
+   35.  Scope Clarification
+   36.  Additional Resources
+
+
+================================================================================
+PART A — PRODUCT & REQUIREMENTS
+================================================================================
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+
+FleetTribe (VexarDrive Fleet Intelligence) is a web-based analytics product
+that transforms one week of two-wheeler fleet telemetry into two distinct,
+explainable analytical experiences:
+
+  (1) Driver Behaviour Dashboard  — Is a driver safe or risky?
+  (2) Vehicle Health Dashboard    — Is a vehicle in good condition?
+
+The current implementation is a focused, reproducible analytical prototype
+built around the supplied fleet dataset. It consists of:
+
+  - A Python analytics pipeline (offline batch) that reads an Excel workbook,
+    engineers features, scores drivers and vehicles, and exports JSON.
+  - A Next.js 16 web application that presents landing previews, authenticated
+    dashboards, drill-down detail pages, and methodology documentation.
+  - Supabase Google OAuth for protecting /app/* routes.
+
+Key analytical truth (verified outputs):
+  - 30 drivers, 30 vehicles, 450 trips, 12,987 telemetry records
+  - Highest-risk driver:  Senthil Pillai · D19 · 77/100 · High Risk
+  - Highest-priority vehicle: TVS Ntorq · V19 · 19/100 · Maintenance Attention
+  - Driver weights: 35% Speed, 30% Acceleration, 25% Gyroscope, 10% Variability
+
+The product does NOT claim accident probability or confirmed mechanical failure.
+It provides fleet-relative, explainable risk and anomaly prioritization.
+
+
+================================================================================
+2. PRODUCT REQUIREMENTS DOCUMENT (PRD) SUMMARY
+================================================================================
+
+Source: 01_PRD.md
+
+2.1 PRODUCT OVERVIEW
+--------------------
+VexarDrive Fleet Intelligence transforms one week of two-wheeler fleet trip
+and mobile-phone telemetry into actionable driver-behaviour and vehicle-health
+insights.
+
+The product MUST provide two distinct analytical experiences:
+  1. Driver Behaviour Dashboard — identify and prioritize risky driving patterns.
+  2. Vehicle Health Dashboard — identify abnormal sensor signatures that may
+     warrant maintenance inspection.
+
+The product MUST communicate methodology behind every score so an interviewer
+can trace a result from raw telemetry to the final dashboard value.
+
+2.2 ASSIGNMENT DATASET CONTEXT
+------------------------------
+  - 30 drivers, 30 vehicles, 450 trips, ~13,000 minute-level telemetry records
+  - One week of trip data (GPS, accelerometer, gyroscope)
+  - No labelled accident outcomes
+  - No labelled mechanical-failure outcomes
+  → Therefore: explainable risk/anomaly prioritization, NOT crash prediction.
+
+2.3 PRIMARY GOALS
+-----------------
+  [x] Explainable Driver Risk Score (0–100) for every driver
+  [x] Explainable Vehicle Health Score (0–100) for every vehicle
+  [x] Fleet-level ranking and prioritization
+  [x] Drill-down: fleet → driver/vehicle → sensor signals
+  [x] Visible assumptions and limitations
+  [x] Polished, deployable web experience
+  [x] Reproducible analytical results from source workbook
+
+2.4 SECONDARY GOALS
+-------------------
+  [x] Demonstrate data-science workflow
+  [x] Demonstrate data engineering and feature engineering
+  [x] Demonstrate business-facing analytics
+  [x] Demonstrate production web application skills
+
+2.5 NON-GOALS (First Version)
+-----------------------------
+  [ ] Diagnose mechanical failures
+  [ ] Predict accidents with supervised ML
+  [ ] Claim legal speeding without road speed-limit data
+  [ ] Infer driver intent
+  [ ] Replace professional maintenance inspection
+  [ ] Real-time fleet monitoring
+  [ ] Live telemetry ingestion
+
+2.6 PRODUCT STRUCTURE
+---------------------
+  PUBLIC:
+    - Landing page, product overview, methodology preview, authentication
+
+  PROTECTED (/app/*):
+    - Fleet Overview
+    - Driver Behaviour + Driver Detail
+    - Vehicle Health + Vehicle Detail
+    - Methodology
+
+2.7 LANDING PAGE REQUIREMENTS
+-----------------------------
+  Must communicate product in under 10 seconds.
+  Hero: "Turn Fleet Telemetry Into Decisions."
+  Dashboard preview must use REAL analytical values (not mockups).
+  Required sections: Nav, Hero, Preview, Driver Intelligence, Vehicle Health,
+  How It Works, Capabilities, Limitations, CTA, Footer.
+
+2.8 AUTHENTICATION REQUIREMENTS
+-------------------------------
+  - Supabase Auth with Google OAuth
+  - /auth login page, callback handling
+  - All /app/* routes protected
+  - Signed-in users redirected away from /auth
+  - Sign-out functionality
+  - No service-role key client-side
+  - Environment variables documented
+
+2.9 FLEET OVERVIEW REQUIREMENTS
+-------------------------------
+  Display: total drivers, vehicles, trips, distance, attention counts.
+  Charts: driver risk distribution, vehicle health distribution.
+  Tables: highest-risk drivers, vehicles requiring attention.
+  NO hardcoded dashboard numbers.
+
+2.10 DRIVER BEHAVIOUR REQUIREMENTS
+----------------------------------
+  Risk Score 0–100 (higher = greater behavioural risk vs fleet).
+  Components: speed, acceleration events, gyroscope/cornering, consistency.
+  Event counts as RATES (per minute) to avoid trip-length bias.
+  Every driver: overall score, risk category, component scores, top factors,
+  plain-English explanation.
+  Dashboard: search, filter, sort, rank, compare, drill-down.
+  Detail: profile, risk score, component breakdown, trip stats, explanation.
+
+2.11 VEHICLE HEALTH REQUIREMENTS
+--------------------------------
+  Health Score 0–100 (higher = more normal sensor signature vs fleet).
+  Inputs: dynamic acceleration, variability, event rates, gyro signals.
+  Age, odometer, service date = CONTEXTUAL only (not scored directly).
+  Wording: "warrants maintenance inspection" — NOT "has mechanical failure."
+  Every vehicle: health score, status, top signals, fleet reference, explanation.
+
+2.12 METHODOLOGY PAGE REQUIREMENTS
+----------------------------------
+  Must explain: data structure, validation, cleaning, feature engineering,
+  normalization, driver scoring, vehicle scoring, thresholds, assumptions,
+  limitations.
+
+2.13 ADDITIONAL DATASET USE CASES (Assignment Requirement)
+-----------------------------------------------------------
+  Must propose realistic future uses distinguishing:
+    - what current data supports
+    - what additional data would be needed
+
+2.14 SUCCESS & ACCEPTANCE CRITERIA
+----------------------------------
+  Complete when: joins correct, outputs reproducible, all drivers/vehicles
+  scored, both dashboards functional, drill-downs work, auth works, landing
+  works, methodology documented, production build succeeds, deployable to
+  Vercel, no fake/hardcoded analytical results.
+
+
+================================================================================
+3. TARGET USERS & SUCCESS CRITERIA
+================================================================================
+
+FLEET MANAGER
+  - Which drivers need coaching?
+  - Which vehicles need inspection?
+  - What are dominant fleet risk patterns?
+
+OPERATIONS MANAGER
+  - Where is risk concentrated?
+  - Which entities should receive attention first?
+  - Do patterns differ across hubs?
+
+DATA / ANALYTICS REVIEWER
+  - How are scores constructed?
+  - Which features drive scores?
+  - Is methodology statistically defensible?
+  - What assumptions and limitations exist?
+
+FINAL USER JOURNEY (from PRD):
+  Landing Page → Google OAuth → Fleet Overview
+    ├── Driver Behaviour → Driver Detail
+    ├── Vehicle Health → Vehicle Detail
+    └── Methodology
+
+
+================================================================================
+4. NON-GOALS & SCOPE BOUNDARIES
+================================================================================
+
+CURRENT ASSIGNMENT SCOPE (IMPLEMENTED):
+  - Single fixed Excel workbook as data source
+  - Offline Python pipeline → static JSON
+  - One-week snapshot analytics
+  - Single-tenant prototype (no multi-org)
+  - Google OAuth only (no RBAC tiers)
+  - Build-time data bundling (not live API)
+
+EXPLICITLY OUT OF SCOPE (FUTURE — see Part E):
+  - Multi-format file upload via web UI
+  - Cloud object storage (S3/GCS/Azure)
+  - Persistent analytics database
+  - Async job queues and ML model serving
+  - Real-time telemetry streaming
+  - Multi-tenant SaaS architecture
+
+
+================================================================================
+PART B — DATA SCIENCE & ANALYTICS
+================================================================================
+
+================================================================================
+5. PROBLEM STATEMENT
+================================================================================
+
+Two-wheeler fleet operators lack visibility into driver risk and vehicle health.
+Dense urban environments produce high manoeuvrability and volatile sensor signals
+that are difficult to prioritize without fleet-relative analytics.
+
+FleetTribe addresses this by:
+  - Identifying high-risk drivers relative to the fleet (coaching prioritization)
+  - Flagging vehicles with abnormal sensor signatures (inspection prioritization)
+  - Ranking entities fleet-wide rather than making absolute failure/accident claims
+
+WHY FLEET-RELATIVE SCORING?
+The dataset has no accident or failure labels. Absolute thresholds (e.g. "speed
+> 60 km/h is dangerous") would be arbitrary without road context. Comparing each
+driver/vehicle to fleet medians using robust statistics produces defensible
+prioritization rankings even without labelled outcomes.
+
+
+================================================================================
+6. DATASET DESCRIPTION
+================================================================================
+
+SOURCE FILE
+  VEXAR_Fleet_Dataset_CANDIDATE_VERSION.xlsx (local, not deployed to Vercel)
+
+SHEETS
+  Drivers, Vehicles, Trips, Telemetry
+
+VOLUME
+  Drivers:    30 rows
+  Vehicles:   30 rows
+  Trips:      450 rows (15 trips per driver)
+  Telemetry:  12,987 minute-level records
+
+TIME PERIOD
+  One week: 2026-07-31 to 2026-08-05
+
+TELEMETRY COLUMNS
+  Trip_ID, Driver_ID, Vehicle_ID, Timestamp, Latitude, Longitude
+  Speed_kmph
+  Accel_X_g, Accel_Y_g, Accel_Z_g
+  Gyro_X_dps, Gyro_Y_dps, Gyro_Z_dps
+
+KEY CONSTRAINT
+  No labelled accident outcomes. No labelled mechanical-failure outcomes.
+
+
+================================================================================
+7. DATA ARCHITECTURE & RELATIONSHIPS
+================================================================================
+
+       ┌──────────────┐               ┌──────────────┐
+       │   Drivers    │               │   Vehicles   │
+       └──────┬───────┘               └──────┬───────┘
+              │ 1                            │ 1
+              │                              │
+              │ 1..*                         │ 1..*
+       ┌──────▼──────────────────────────────▼──────┐
+       │                   Trips                    │
+       └──────────────────────┬─────────────────────┘
+                              │ 1
+                              │ 1..*
+       ┌──────────────────────▼─────────────────────┐
+       │                 Telemetry                  │
+       └────────────────────────────────────────────┘
+
+JOIN RULES (mandatory — Rule 2.4):
+  Telemetry.Trip_ID  →  Trips.Trip_ID
+  Trips.Driver_ID    →  Drivers.Driver_ID
+  Trips.Vehicle_ID   →  Vehicles.Vehicle_ID
+
+
+================================================================================
+8. DATA INGESTION & PREPROCESSING
+================================================================================
+
+PIPELINE ENTRY POINT
+  python analysis/pipeline.py  (from repository root)
+
+WHY header=2?
+All Excel sheets have title banners in Row 0 and empty spacer in Row 1.
+Actual column headers are at Row 2. Using header=2 in pandas loads schemas
+correctly. Without this, column names would be wrong and joins would fail.
+
+PREPROCESSING STEPS
+  1. Parse Excel sheets with header=2
+  2. Parse date/time fields (Trip_Date, Start_Time, End_Time, Timestamp)
+  3. Join Telemetry → Trips → Drivers/Vehicles metadata
+  4. Log physically implausible readings (speed > 150 kmph, etc.)
+     Outliers are LOGGED, not silently deleted (Rule: no silent deletion)
+
+IMPLEMENTATION FILE
+  analysis/pipeline.py, analysis/validation.py
+
+
+================================================================================
+9. DATA VALIDATION & QUALITY ASSESSMENT
+================================================================================
+
+VALIDATION RESULTS (verified):
+  - 0 missing/null values across all columns
+  - 0 duplicate rows in master or transaction sheets
+  - All 450 trips map to valid drivers and vehicles
+  - All 12,987 telemetry records map to existing trips (no orphans)
+  - 100% telemetry coverage (no trips without telemetry)
+
+VALIDATION SCRIPT
+  python analysis/test_outputs.py
+
+WHY THIS MATTERS
+Broken foreign keys would produce incorrect per-driver aggregations.
+Validation ensures every dashboard number traces to real joined data.
+
+
+================================================================================
+10. FEATURE ENGINEERING
+================================================================================
+
+Telemetry-level features:
+  Acceleration magnitude (g):
+    a_magnitude = sqrt(Accel_X^2 + Accel_Y^2 + Accel_Z^2)
+
+  Dynamic acceleration (gravity-subtracted):
+    a_dynamic = |a_magnitude - 1|
+
+  Gyroscope magnitude (angular velocity, dps — NOT angular acceleration):
+    omega_magnitude = sqrt(Gyro_X^2 + Gyro_Y^2 + Gyro_Z^2)
+
+Trip-level features:
+  - Speed profile: mean, std, max, p95 speed
+  - Event rates: dynamic accel spikes and gyro spikes per telemetry MINUTE
+    (WHY per-minute? Removes bias from longer trips with more raw events)
+
+Driver-level aggregations (across 15 trips per driver):
+  - avg_speed, p95_speed, mean_accel_rate, mean_gyro_rate
+  - speed_variability, accel_variability
+
+Vehicle-level aggregations:
+  - vibration_variance (dynamic acceleration variance)
+  - gyro_variance (gyroscope magnitude variance)
+  - mean_dynamic_accel, mean_gyro_speed
+
+
+================================================================================
+11. DRIVER BEHAVIOUR METHODOLOGY
+================================================================================
+
+PURPOSE
+  Construct a 0–100 Driver Risk Score where higher = greater observed
+  behavioural risk RELATIVE TO THE FLEET.
+
+WHY FOUR COMPONENTS?
+Each captures a distinct behavioural dimension observable in telemetry:
+  Speed (35%):        Sustained/high percentile speed patterns
+  Acceleration (30%): Harsh accel/braking event frequency
+  Gyroscope (25%):    Aggressive cornering/weaving proxy (angular velocity)
+  Variability (10%):   Trip-to-trip inconsistency (erratic patterns)
+
+WHY THESE WEIGHTS?
+Speed and acceleration are primary observable risk proxies in urban
+two-wheeler telemetry. Gyroscope captures manoeuvring behaviour. Variability
+is a supporting signal (10%) — inconsistency alone is not proof of danger
+but amplifies other signals. Weights are hypotheses validated via sensitivity
+analysis (Section 14).
+
+NORMALIZATION — WHY ROBUST Z-SCORE (MEDIAN + MAD)?
+Standard mean/std Z-scores are distorted by extreme outliers in telemetry.
+Robust Z-score uses median and Median Absolute Deviation (MAD):
+
+  robust_z(x) = 0.6745 × (x - median(X)) / MAD(X)
+
+MAD = 0 fallback: use standard deviation.
+Both zero fallback: Z = 0 (no information).
+
+Z-scores clipped to [-2, +3], then scaled to 0–100 per component.
+
+FINAL RISK SCORE FORMULA:
+  Risk = 0.35 × Speed + 0.30 × Accel + 0.25 × Gyro + 0.10 × Variability
+
+RISK LEVELS (implemented):
+  Low Risk:       0 – 30
+  Moderate Risk:  30 – 60
+  High Risk:      60 – 100
+
+EXAMPLE (ground truth):
+  Senthil Pillai (D19): 77/100 High Risk
+  Components: Speed 58 | Accel 100 | Gyro 69 | Variability 88
+
+
+================================================================================
+12. VEHICLE HEALTH METHODOLOGY
+================================================================================
+
+PURPOSE
+  Construct a 0–100 Vehicle Health Score where higher = MORE NORMAL
+  sensor behaviour relative to the fleet. Lower scores = higher abnormality.
+
+COMPONENTS
+  1. Vibration Anomaly Index: variance of dynamic acceleration vs fleet
+  2. Gyroscope Anomaly Index: variance of gyroscope magnitudes vs fleet
+
+SCORE FORMULA:
+  Health Score = 100 - Sensor Abnormality Score
+
+  Sensor Abnormality Score = scaled fleet-relative distance of sensor
+  variance from fleet median (robust Z-score normalization applied).
+
+WHY NOT USE ODOMETER/AGE IN THE SCORE?
+Vehicle age, odometer, and last service date are displayed as CONTEXTUAL
+information only. Including them in the telemetry-based score would conflate
+maintenance history with physics-based sensor anomaly detection. A vehicle
+could be old but sensor-normal, or new but sensor-abnormal.
+
+HEALTH STATUS (implemented):
+  Healthy:                80 – 100
+  Monitor:                50 – 80
+  Maintenance Attention:  0 – 50
+
+DISCLAIMER (shown in UI):
+  "Sensor-derived signal. Does not predict mechanical failure."
+
+EXAMPLE (ground truth):
+  TVS Ntorq (V19): 19/100 Maintenance Attention
+  Anomalies: Vibration 100 | Gyro 61
+
+
+================================================================================
+13. EXPLAINABILITY & METRIC JUSTIFICATION
+================================================================================
+
+ASSIGNMENT REQUIREMENT:
+  "For each metric or score shown on your dashboards, you must justify why
+  that value is what it is and clearly note any assumptions."
+
+WHERE JUSTIFICATION APPEARS IN THE APPLICATION:
+
+  Location                          What It Shows
+  --------------------------------  ------------------------------------------
+  /app/methodology                  Full pipeline, formulas, weights,
+                                    assumptions, limitations, sensitivity table
+  /app/drivers/[id]                 "Why This Matters" explanation text,
+                                    score breakdown with weight % per component,
+                                    top contributing factor tags
+  /app/vehicles/[id]                Sensor signature summary, anomaly descriptions,
+                                    contextual vs scored fields labelled
+  Landing explainability section    Top driver explanation with score
+  methodology.json                  Machine-readable weights and thresholds
+  driver_features.json              Per-driver explanation + top_factors[]
+  vehicle_features.json             Per-vehicle explanation + top_signals[]
+
+EXAMPLE DRIVER EXPLANATION (D19):
+  "Senthil Pillai is classified as High Risk (Score: 77/100). The risk
+  profile is primarily influenced by elevated Acceleration Volatility and
+  Behavioural Variability relative to the rest of the fleet."
+
+KEY ASSUMPTIONS (documented in /app/methodology):
+  - Scores are fleet-relative, not absolute safety guarantees
+  - No accident labels exist; risk is a behavioural proxy
+  - Gyroscope measures angular velocity (dps), not angular acceleration
+  - Event rates normalized per telemetry minute
+  - MAD=0 protected with std fallback
+  - Vehicle contextual fields excluded from health score calculation
+  - One-week snapshot; no longitudinal trends possible
+
+
+================================================================================
+14. SENSITIVITY ANALYSIS & VALIDATION
+================================================================================
+
+WHY PERFORM SENSITIVITY ANALYSIS?
+To verify that driver rankings are stable under reasonable weight perturbations.
+If rankings reshuffled dramatically with small weight changes, the scoring
+system would be unreliable for operations prioritization.
+
+METHOD
+  5 perturbation runs with adjusted component weights (±5% variations).
+  Spearman rank correlation computed between baseline and perturbed rankings.
+
+RESULT
+  Spearman ρ >= 0.97 across all 5 runs.
+  Average rank shift < 1 position.
+  → Driver prioritization rankings are robust to reasonable methodology changes.
+
+Full sensitivity table: /app/methodology (from fleet_summary.json)
+
+
+================================================================================
+15. ANALYTICAL OUTPUTS (JSON SCHEMA)
+================================================================================
+
+CANONICAL SOURCE:  analysis/outputs/
+DEPLOYED COPY:     app/lib/data/  (copied at build via copy_to_app.js)
+
+FILES
+  driver_features.json   — 30 drivers with scores, ranks, explanations
+  vehicle_features.json  — 30 vehicles with health scores, anomaly indices
+  trip_features.json     — 450 trip-level feature records
+  fleet_summary.json     — fleet KPIs, distributions, sensitivity analysis
+  methodology.json       — scoring weights, thresholds, pipeline metadata
+
+DRIVER FEATURE FIELDS (key):
+  Driver_ID, Driver_Name, risk_score, risk_level, rank
+  score_speed, score_accel, score_gyro, score_variability
+  explanation, top_factors[]
+  avg_speed, p95_speed, mean_accel_rate, mean_gyro_rate, ...
+
+VEHICLE FEATURE FIELDS (key):
+  Vehicle_ID, Make, Model, health_score, health_status, rank
+  anomaly_vibration, anomaly_gyro, sensor_abnormality_score
+  explanation, top_signals[]
+  vibration_variance, gyro_variance, ...
+
+WHY JSON (NOT DATABASE)?
+For this assignment scale (30 drivers, 12,987 records), precomputed JSON
+bundled at build time is simple, reproducible, and deployable on Vercel
+without database costs. Production would use persistent storage (see Part E).
+
+
+================================================================================
+16. ADDITIONAL DATASET USE CASES
+================================================================================
+
+ASSIGNMENT REQUIREMENT: Propose what else this dataset could be used for.
+
+  Use Case                  Current Data Supports           Additional Data Needed
+  ------------------------  ----------------------------    ---------------------------
+  Predictive Maintenance    Sensor variance anomaly         Failure labels,
+                            indices for inspection          maintenance records,
+                            priority                        multi-week telemetry
+
+  Driver Coaching             Per-driver risk scores,         Coaching outcome
+                              component breakdowns,           tracking, before/after
+                              top factors                     trip comparisons
+
+  Accident / Crash-Risk       Fleet-relative behavioural      Labelled accident or
+  Modelling                   risk proxy signal               near-miss outcomes
+
+  Fleet Optimization          Trip counts, hub                Cost data, route maps,
+                              assignments, vehicle-driver     demand forecasts
+                              pairings
+
+  Insurance & Operational     Explainable fleet-normalized    Claims history, premium
+  Risk Analytics              scores with documented          data, benchmark fleets
+                              methodology
+
+Implemented in UI: /app/methodology → "Additional Dataset Use Cases"
+
+
+================================================================================
+PART C — ENGINEERING & APPLICATION
+================================================================================
+
+================================================================================
+17. TECHNOLOGY STACK & RATIONALE
+================================================================================
+
+  Layer          Technology              Why Chosen
+  -------------  ----------------------  ---------------------------------
+  Frontend       Next.js 16 + TypeScript Production routing, SSG for 70 pages,
+                                         type-safe data interfaces
+  Styling        Tailwind CSS 4          Fast consistent UI, dark/light themes
+  Components     shadcn/ui + Lucide      Accessible primitives, icon system
+  Animation      GSAP ScrollTrigger      Landing scroll story (pinned steps)
+  Analytics      Python 3.10+            Tabular data processing standard
+  Data libs      Pandas, NumPy, openpyxl Excel parsing, vectorized computation
+  Auth           Supabase Auth           Managed Google OAuth, session cookies
+  Hosting        Vercel                  Native Next.js deployment, CDN
+
+ARCHITECTURE PRINCIPLE (from 02_TECH_STACK.md):
+  The frontend is a PRESENTATION layer. It must NOT be the source of truth
+  for analytical calculations. All scores are computed in Python and consumed
+  as precomputed JSON.
+
+
+================================================================================
+18. SYSTEM ARCHITECTURE (CURRENT — IMPLEMENTED)
+================================================================================
+
+  Excel Workbook (local, not deployed)
+          |
+          v  [Offline batch: python analysis/pipeline.py]
+  analysis/outputs/*.json
+          |
+          v  [Build step: node analysis/copy_to_app.js]
+  app/lib/data/*.json
+          |
+          v  [Next.js App Router — single port 3000]
+  Browser (Landing + Dashboards)
+          |
+          v  [middleware.ts session check]
+  Supabase Auth (Google OAuth — hosted externally)
+
+NO SEPARATE BACKEND PORT REQUIRED.
+  - Python pipeline = offline script, not a running server
+  - Fleet data = static JSON imports, not REST API calls
+  - Supabase = auth only, not fleet data storage
+
+
+================================================================================
+19. PYTHON → NEXT.JS DATA BRIDGE
+================================================================================
+
+WHY NOT CALL PYTHON FROM NEXT.JS AT RUNTIME?
+  - Vercel serverless functions have execution time limits
+  - Python + pandas is heavy for serverless cold starts
+  - Assignment requires reproducible, auditable offline analytics
+  - Build-time bundling ensures dashboard and pipeline always agree
+
+THE BRIDGE (copy_to_app.js):
+  Triggered by: npm run dev  AND  npm run build
+  Action: copies analysis/outputs/*.json → app/lib/data/*.json
+  Requirement: full monorepo must be present (not app/ folder alone)
+
+CONSUMPTION IN NEXT.JS:
+  import driversRaw from '@/lib/data/driver_features.json'
+  const drivers = driversRaw as DriverFeature[]
+
+TYPESCRIPT TYPES (lib/types.ts):
+  DriverFeature, VehicleFeature, FleetSummary, Methodology interfaces
+  ensure dashboard components receive correctly shaped data.
+
+
+================================================================================
+20. APPLICATION STRUCTURE & ROUTES
+================================================================================
+
+  Route                        Auth     Type    Description
+  ---------------------------  -------  ------  ---------------------------
+  /                            No       Static  Landing page
+  /auth                        No       Client  Google OAuth sign-in
+  /auth/callback               No       API     OAuth code exchange
+  /app                         Yes      Static  Fleet overview
+  /app/drivers                 Yes      Client  Driver risk table
+  /app/drivers/[driverId]      Yes      SSG×30  Driver detail pages
+  /app/vehicles                Yes      Client  Vehicle health table
+  /app/vehicles/[vehicleId]    Yes      SSG×30  Vehicle detail pages
+  /app/methodology             Yes      Static  Full methodology docs
+
+  Total pages at build: 70
+
+KEY FILES
+  app/app/page.tsx                          Landing page
+  app/app/app/layout.tsx                    Dashboard shell + sidebar
+  app/app/app/drivers/page.tsx              Driver dashboard
+  app/app/app/drivers/[driverId]/page.tsx   Driver detail
+  app/app/app/vehicles/page.tsx             Vehicle dashboard
+  app/app/app/vehicles/[vehicleId]/page.tsx Vehicle detail
+  app/app/app/methodology/page.tsx          Methodology
+  app/middleware.ts                         Auth protection
+  app/components/landing/*                  Landing sections
+  app/components/dashboard/app-sidebar.tsx  Navigation
+
+
+================================================================================
+21. USER FLOW
+================================================================================
+
+FLOW A — ANONYMOUS VISITOR
+  1. Opens landing page (/)
+  2. Sees hero, fleet snapshot, GSAP scroll story, driver/vehicle previews
+  3. Preview tables are READ-ONLY (no View links — auth required for detail)
+  4. Clicks Dashboard / Sign in → /auth
+  5. Clicks All drivers/vehicles → /auth (middleware blocks /app/*)
+
+FLOW B — AUTHENTICATION
+  1. /auth → Continue with Google
+  2. Google OAuth → Supabase → GET /auth/callback?code=...
+  3. Session cookie set → redirect to /app (or ?next= preserved path)
+  4. Already signed in at /auth → redirect to /app
+
+FLOW C — SIGNED-IN FLEET MANAGER
+  1. /app — Fleet overview (KPIs, top drivers, top vehicles)
+  2. /app/drivers — search, filter by risk, sort, View → detail
+  3. /app/drivers/D19 — full profile, explanation, score breakdown
+  4. /app/vehicles — search, filter by status, sort, View → detail
+  5. /app/vehicles/V19 — health profile, anomaly indices, explanation
+  6. /app/methodology — full pipeline documentation
+  7. Sign out → /auth
+
+FLOW D — DEEP LINK WITH EXPIRED SESSION
+  1. Opens /app/drivers/D19 directly
+  2. Middleware → /auth?next=/app/drivers/D19
+  3. After sign-in → returned to /app/drivers/D19
+
+
+================================================================================
+22. APPLICATION FLOW
+================================================================================
+
+REQUEST LIFECYCLE:
+  Browser → middleware.ts (auth check) → App Router → Component → HTML
+
+  /app/* without session  →  redirect /auth?next=[path]
+  /auth with session      →  redirect /app
+  / (landing)             →  public, no auth
+
+DASHBOARD COMPONENT HIERARCHY:
+  AppLayout
+    └── AppSidebar (Overview, Drivers, Vehicles, Methodology, Sign out)
+    └── Page content (imports JSON from app/lib/data/)
+
+DATA FLOW (no runtime fleet API):
+  driver_features.json  → DriversDashboard, DriverDetail, Landing previews
+  vehicle_features.json → VehiclesDashboard, VehicleDetail, Landing previews
+  fleet_summary.json    → FleetOverview, Methodology sensitivity table
+  methodology.json      → Methodology page weights
+
+
+================================================================================
+23. API & SERVER ENDPOINTS
+================================================================================
+
+FleetTribe has NO REST API for fleet analytics. Data is static JSON.
+
+ENDPOINT: GET /auth/callback
+  File:     app/app/auth/callback/route.ts
+  Purpose:  Exchange Google OAuth code for Supabase session
+  Params:   code (required), next (optional, default /app, must start /app)
+  Success:  HTTP 302 → {origin}{next}, session cookies set
+  Failure:  HTTP 302 → /auth?error=auth_callback_failed
+
+CLIENT-SIDE AUTH (Supabase JS SDK):
+  Sign-in:  supabase.auth.signInWithOAuth({ provider: 'google' })
+  Sign-out: supabase.auth.signOut()
+  Session:  supabase.auth.getUser() in middleware
+
+
+================================================================================
+24. AUTHENTICATION & SECURITY
+================================================================================
+
+  - All /app/* protected by Next.js middleware (middleware.ts)
+  - Unauthenticated → /auth?next= preserved for post-login redirect
+  - Landing previews do NOT link to detail pages (by design)
+  - Supabase anon key only (service_role NEVER client-side)
+  - OAuth redirect URLs whitelisted in Supabase dashboard
+  - Dev bypass: Supabase unconfigured + NODE_ENV=development → /app accessible
+    (local preview only; production requires auth)
+
+
+================================================================================
+25. DRIVER BEHAVIOUR DASHBOARD
+================================================================================
+
+URL:     /app/drivers  |  /app/drivers/[driverId]
+Answers: "Is this driver safe or risky relative to the fleet?"
+
+TABLE FEATURES:
+  - KPI cards: High / Moderate / Low risk counts (clickable filters)
+  - Search by name or Driver_ID
+  - Sortable: rank, risk score, all component scores
+  - Row highlight for #1 highest-risk driver
+  - View → link to detail (authenticated only)
+
+DETAIL PAGE FEATURES:
+  - Risk score + badge + fleet rank
+  - Profile card (age, experience, hub, trips)
+  - Fleet position percentile bar
+  - Primary vehicle link
+  - Analysis explanation (plain English)
+  - Score breakdown: Speed 35%, Accel 30%, Gyro 25%, Var 10%
+  - Raw telemetry summary metrics
+
+
+================================================================================
+26. VEHICLE HEALTH DASHBOARD
+================================================================================
+
+URL:     /app/vehicles  |  /app/vehicles/[vehicleId]
+Answers: "Is this vehicle behaving normally or does it need inspection?"
+
+TABLE FEATURES:
+  - KPI cards: Attention / Monitor / Healthy counts (clickable filters)
+  - Search by make, model, Vehicle_ID
+  - Sortable: rank, health score, anomaly indices
+  - Row highlight for #1 highest-priority vehicle
+  - View → link to detail (authenticated only)
+
+DETAIL PAGE FEATURES:
+  - Health score + status badge + fleet rank
+  - Vehicle info (contextual — labelled "not scored")
+  - Fleet position percentile bar
+  - Assigned driver link
+  - Vibration + Gyroscope anomaly indices with descriptions
+  - Analysis explanation + top sensor signal tags
+  - Raw sensor metrics
+
+
+================================================================================
+27. LANDING PAGE & PUBLIC EXPERIENCE
+================================================================================
+
+Sections implemented:
+  1. Navbar (Overview, Drivers, Vehicles, Methodology, theme toggle, Sign in)
+  2. Hero — "Turn Fleet Telemetry Into Decisions."
+  3. Fleet Snapshot — live counts from fleet_summary.json
+  4. GSAP Scroll Story — 5-step pinned narrative (Telemetry → Explainability)
+  5. Driver Intelligence preview — top 8 drivers, search, filters (read-only)
+  6. Vehicle Health preview — top 8 vehicles, search, filters (read-only)
+  7. Explainability section — top driver explanation
+  8. Methodology preview
+  9. CTA + Footer
+
+Landing previews use REAL data from JSON (not mockups).
+No View links on landing (auth required for drill-down).
+
+
+================================================================================
+PART D — OPERATIONS
+================================================================================
+
+================================================================================
+28. ENVIRONMENT VARIABLES
+================================================================================
+
+  Variable                          Required   Description
+  --------------------------------  ---------  ----------------------------------
+  NEXT_PUBLIC_SUPABASE_URL          Yes*       Supabase project URL
+  NEXT_PUBLIC_SUPABASE_ANON_KEY     Yes*       Supabase anonymous/public key
+
+  * Required for production auth.
+
+  Local:  app/.env.local (never commit)
+  Vercel: Project → Settings → Environment Variables → Redeploy
+
+
+================================================================================
+29. BUILD, TEST & DEPLOYMENT
+================================================================================
+
+LOCAL DEVELOPMENT
+  cd app && npm install && npm run dev
+  → http://localhost:3000
+  (auto-copies JSON on start)
+
+UPDATE DATA FROM EXCEL
+  python analysis/pipeline.py
+  python analysis/test_outputs.py
+  git add analysis/outputs/*.json && git push
+  (Vercel auto-rebuilds)
+
+PRODUCTION BUILD
+  cd app && npm run build   → 70 static pages, 0 TS errors
+  npm start
+
+VERCEL DEPLOYMENT
+  1. Push full repo to GitHub (include analysis/outputs/*.json)
+  2. Import on Vercel — Root Directory: app
+  3. Add Supabase env vars
+  4. Supabase → add https://[domain].vercel.app/auth/callback
+  5. Deploy and verify /app/drivers/D19, /app/vehicles/V19
+
+NOTE: Excel file is NOT deployed. Only JSON outputs go to production.
+
+
+================================================================================
+30. ENGINEERING RULES COMPLIANCE
+================================================================================
+
+  Rule (03_RULES_AND_REGULATIONS.md)     Status
+  -------------------------------------  ------
+  Excel workbook is source of truth        PASS
+  No fabricated drivers/vehicles/scores    PASS
+  Every metric traceable: raw→feature→score PASS
+  Required joins enforced                  PASS
+  Outliers logged, not silently deleted    PASS
+  Frontend not source of analytical truth  PASS
+  No service-role key exposed              PASS
+  Secrets not in repository                PASS
+  Responsive layouts                       PASS
+  No NaN/undefined dashboard values        PASS
+
+
+================================================================================
+31. REQUIREMENTS COMPLIANCE CHECKLIST
+================================================================================
+
+  Requirement                                    Status
+  ---------------------------------------------  ------
+  Two distinct dashboards (Driver + Vehicle)     PASS
+  Driver risk prioritization                       PASS
+  Vehicle health / maintenance signals             PASS
+  Explainable scores (not black-box)               PASS
+  Drill-down fleet → entity → signals              PASS
+  Methodology visible to reviewer                  PASS
+  Metric justification for every score             PASS
+  Assumptions clearly noted                        PASS
+  Additional dataset use cases proposed            PASS
+  Current vs additional data distinguished         PASS
+  No unsupported accident/failure claims           PASS
+  Google OAuth authentication                      PASS
+  Protected /app/* routes                          PASS
+  Landing previews do not bypass auth              PASS
+  Deployable to Vercel                             PASS
+  Reproducible from source workbook                PASS
+  Real analytical values on landing                PASS
+  Production build succeeds (70 pages)             PASS
+
+  OVERALL: ALL IDENTIFIED REQUIREMENTS MET.
+
+
+================================================================================
+PART E — LIMITATIONS & FUTURE
+================================================================================
+
+================================================================================
+32. CURRENT LIMITATIONS & ASSUMPTIONS
+================================================================================
+
+  - One-week snapshot only — no longitudinal trend analysis
+  - Fleet-relative scores — not absolute safety guarantees
+  - No accident or failure labels in dataset
+  - Homogeneous fleet (two-wheelers, single city context)
+  - Static JSON at build time — data updates require re-pipeline + redeploy
+  - Single-tenant prototype — no multi-organization isolation
+  - Gyroscope = angular velocity (dps), not angular acceleration
+  - Vehicle contextual fields (age, odometer) excluded from health score
+  - Auth required for all dashboard access (landing is preview-only)
+
+
+================================================================================
+33. FUTURE FEATURES & PRODUCTION ROADMAP
+================================================================================
+
+FleetTribe's current implementation is a focused, reproducible analytical
+prototype built around the supplied fleet dataset. A production-scale version
+could evolve from a static dataset-specific analytics application into a
+general-purpose fleet intelligence platform capable of accepting heterogeneous
+fleet data, automatically profiling it, running appropriate analytics and ML
+workflows, persisting results, and presenting continuously updated insights.
+
+These capabilities are intentionally scoped as FUTURE production extensions
+because they require additional cloud infrastructure, persistent storage,
+asynchronous processing, model-serving infrastructure, and a broader
+data-governance layer beyond the scope of the current assignment.
+
+------------------------------------------------------------------------
+33.1 UNIVERSAL FLEET DATA INGESTION
+------------------------------------------------------------------------
+Future FleetTribe could allow fleet managers to upload data files directly
+through the web application.
+
+Potential supported formats: CSV, XLSX/XLS, JSON, Parquet, TSV, ZIP archives
+
+Potential flow:
+  User Upload → File Validation → Schema Detection → Format Parsing
+  → Data Profiling → Schema Mapping → EDA → Feature Engineering
+  → ML / Analytics Pipeline
+
+The system could detect column names, data types, missing values, duplicate
+records, timestamps, driver/vehicle/trip identifiers, GPS, accelerometer,
+and gyroscope columns, then map heterogeneous schemas into a canonical
+FleetTribe data model.
+
+------------------------------------------------------------------------
+33.2 CLOUD DATA LAKE / OBJECT STORAGE
+------------------------------------------------------------------------
+Uploaded files could be stored in cloud object storage:
+  - Google Cloud Storage
+  - Azure Blob Storage
+  - Amazon S3
+
+Benefits: large files, raw-data preservation, versioning, reproducibility,
+reprocessing, auditability, raw vs processed separation.
+
+Flow:
+  User Upload → Secure Upload Endpoint → Object Storage
+  → Dataset Metadata Record → Async Processing Job → Analytics Pipeline
+
+------------------------------------------------------------------------
+33.3 PERSISTENT FLEET DATA PLATFORM
+------------------------------------------------------------------------
+A production database could store:
+  users, organizations/fleets, datasets, upload history, drivers, vehicles,
+  trips, telemetry, feature sets, model versions, inference runs,
+  predictions, anomaly results, EDA summaries.
+
+Raw large telemetry would use object storage / warehouse — not all in PostgreSQL.
+
+------------------------------------------------------------------------
+33.4 AUTOMATED DATASET PROFILING & EDA
+------------------------------------------------------------------------
+After upload, automatic exploratory data analysis:
+
+  Data quality: row/column counts, missing %, duplicates, invalid records,
+                outliers, type inference
+  Statistical:  mean, median, std, percentiles, distributions, correlations
+  Fleet:        driver/vehicle/trip distributions, telemetry frequency,
+                trip duration, distance, speed, sensor distributions
+
+EDA results would automatically appear in the dashboard.
+
+------------------------------------------------------------------------
+33.5 INTELLIGENT SCHEMA MAPPING
+------------------------------------------------------------------------
+Different providers name equivalent fields differently:
+  vehicle_id / vehicleId / vehicle_identifier
+  driver_id / driverId / driver_identifier
+  speed / vehicle_speed / speed_kmh
+
+A schema-mapping layer would identify semantic equivalents and map to
+canonical internal schema. Low-confidence mappings would prompt user
+confirmation before processing.
+
+------------------------------------------------------------------------
+33.6 DATASET-SPECIFIC ML INFERENCE
+------------------------------------------------------------------------
+After profiling and transformation, route to appropriate pipeline:
+
+  Potential models:
+    - driver risk classification
+    - anomaly detection
+    - predictive maintenance
+    - trip-level risk prediction
+    - vehicle health estimation
+    - driver clustering
+    - route anomaly detection
+
+  Flow:
+    Dataset → Feature Engineering → Model Selection → Inference
+    → Validation → Storage → Dashboard
+
+  The system should NOT blindly train a new model per upload. It should
+  determine: compatible with existing model | needs recalibration |
+  needs retraining | unsupervised anomaly pipeline.
+
+------------------------------------------------------------------------
+33.7 CUSTOM MODEL TRAINING & FINE-TUNING
+------------------------------------------------------------------------
+With sufficient labelled historical data:
+  Inputs: historical telemetry, accident labels, maintenance records,
+          service history, coaching outcomes, failure events
+
+  Lifecycle:
+    Training Dataset → Feature Engineering → Train/Val/Test Split
+    → Model Training → Evaluation → Model Registry
+    → Versioned Deployment → Inference → Monitoring
+
+  Model versioning ensures every prediction traces to its generating model.
+
+------------------------------------------------------------------------
+33.8 PERSISTENT ANALYTICS & MODEL OUTPUT STORAGE
+------------------------------------------------------------------------
+Instead of build-time JSON only, persist:
+  driver scores, vehicle scores, anomaly scores, feature values,
+  predictions, model version, inference timestamp, dataset version,
+  EDA summaries.
+
+Enables: historical comparison, trend analysis, audit trails,
+model comparison, reproducibility.
+
+------------------------------------------------------------------------
+33.9 ASYNCHRONOUS DATA PROCESSING
+------------------------------------------------------------------------
+Large uploads and ML workloads should not block HTTP requests.
+
+  Upload → Object Storage → Job Queue → Worker
+  → Pipeline → Database → Dashboard
+
+Modes: on-demand, scheduled daily/hourly, near-real-time streaming.
+
+------------------------------------------------------------------------
+33.10 DATASET & PIPELINE VERSIONING
+------------------------------------------------------------------------
+Each upload receives:
+  dataset_id, dataset_version, upload_timestamp, schema_version,
+  pipeline_version, model_version
+
+Enables answering: "Why did this driver's score change?"
+
+------------------------------------------------------------------------
+33.11 LONGITUDINAL FLEET INTELLIGENCE
+------------------------------------------------------------------------
+Current assignment = one-week snapshot (no meaningful trends).
+
+With historical data:
+  - driver risk trends
+  - vehicle health trends
+  - maintenance timelines
+  - fleet risk trends
+  - recurring anomaly detection
+  - improvement after driver coaching
+  - pre/post maintenance comparisons
+
+------------------------------------------------------------------------
+33.12 MULTI-FLEET / MULTI-TENANT ARCHITECTURE
+------------------------------------------------------------------------
+Production SaaS supporting multiple organizations:
+
+  Organization
+    ├── Users
+    ├── Fleets
+    ├── Datasets
+    ├── Drivers
+    ├── Vehicles
+    ├── Trips
+    ├── Models
+    └── Analytics
+
+Requires strict data isolation and role-based access control.
+
+------------------------------------------------------------------------
+33.13 DIRECT FLEET DATA CONNECTORS
+------------------------------------------------------------------------
+Instead of manual uploads, connect to:
+  fleet management systems, telematics APIs, GPS providers, IoT platforms,
+  cloud storage buckets, enterprise databases.
+
+Methods: REST API, SFTP, S3, GCS, Azure Blob, scheduled exports,
+streaming telemetry.
+
+------------------------------------------------------------------------
+33.14 PRODUCTION MLOPS & DATA MONITORING
+------------------------------------------------------------------------
+Monitor: data drift, feature drift, prediction drift, model performance,
+pipeline failures, schema changes, missing data, latency, resource use.
+
+  Flow: Data Monitoring → Drift Detection → Alert
+  → Model Evaluation → Retraining Decision
+
+------------------------------------------------------------------------
+33.15 CONFIGURABLE SCORING & BUSINESS RULES
+------------------------------------------------------------------------
+Fleet managers could configure:
+  risk thresholds, alert thresholds, scoring weights, maintenance rules,
+  notification rules.
+
+Configuration changes versioned and audited for reproducibility.
+
+------------------------------------------------------------------------
+33.16 FLEET ALERTS & NOTIFICATIONS
+------------------------------------------------------------------------
+Notify when:
+  - driver enters high-risk state
+  - vehicle health falls below threshold
+  - unusual sensor behaviour detected
+  - new data fails validation
+  - model detects significant anomalies
+  - maintenance signals persist
+
+Channels: Email, Slack, Teams, SMS, web notifications.
+
+------------------------------------------------------------------------
+33.17 PROPOSED PRODUCTION ARCHITECTURE (NOT IMPLEMENTED)
+------------------------------------------------------------------------
+
+  *** PROPOSED FUTURE ARCHITECTURE — NOT IMPLEMENTED IN THIS ASSIGNMENT ***
+
+  Fleet Manager
+      ↓
+  FleetTribe Web App (Next.js)
+      ↓
+  Auth / DB + Upload API
+      ↓
+  Cloud Object Storage (S3 / GCS / Azure Blob)
+      ↓
+  Job Queue / Worker
+      ↓
+  Data Profiling + EDA
+      ↓
+  ML Pipeline / Model Inference
+      ↓
+  Analytics Database
+      ↓
+  FleetTribe Dashboard
+
+Production architecture separates raw storage, processing, model execution,
+and presentation so each layer scales independently.
+
+------------------------------------------------------------------------
+33.18 WHAT I WOULD BUILD WITH ADDITIONAL RESOURCES
+------------------------------------------------------------------------
+The next major feature would be a universal fleet-data ingestion platform.
+Instead of requiring a fixed Excel workbook, FleetTribe would allow users to
+upload datasets in multiple formats, store raw files in cloud object storage,
+automatically profile and explore the dataset, map schema to FleetTribe's
+canonical representation, run feature-engineering and ML pipeline, persist
+outputs, and surface insights in dashboards.
+
+That would transform FleetTribe from a dataset-specific analytical application
+into a general-purpose fleet intelligence platform.
+
+
+================================================================================
+34. CURRENT vs FUTURE CAPABILITY MATRIX
+================================================================================
+
+  Capability                    Current          Future Direction
+  ----------------------------  ---------------  ----------------------------
+  Excel ingestion               Implemented      Multi-format ingestion
+  Static JSON outputs           Implemented      Persistent analytics DB
+  Offline Python pipeline       Implemented      Async production pipeline
+  Fixed schema                  Implemented      Automatic schema mapping
+  Dataset-specific scoring      Implemented      Generalized ML pipeline
+  Precomputed outputs           Implemented      Model registry + serving
+  Static/local source dataset   Implemented      Cloud object storage
+  One-week snapshot             Implemented      Historical longitudinal data
+  Google OAuth                  Implemented      Multi-tenant RBAC
+  Dashboard analytics           Implemented      Scheduled/near-real-time
+
+
+================================================================================
+35. SCOPE CLARIFICATION
+================================================================================
+
+The future roadmap in Section 33 is intentionally NOT presented as
+implemented functionality. Those capabilities require:
+
+  - Additional cloud infrastructure
+  - Persistent storage and data versioning
+  - Asynchronous processing and job queues
+  - Model-serving infrastructure
+  - Governance, security controls, and RBAC
+  - Broader labelled datasets for supervised ML
+
+They represent the next logical evolution of FleetTribe beyond the current
+assignment prototype.
+
+The current assignment delivers:
+  - A complete, reproducible analytical pipeline
+  - Two functional, explainable dashboards
+  - Authenticated web application deployable to Vercel
+  - Full methodology documentation traceable to source data
+
+This demonstrates data-science rigour, engineering discipline, and product
+awareness of what production would require — without overclaiming that
+the prototype is production infrastructure.
+
+
+================================================================================
+36. ADDITIONAL RESOURCES
+================================================================================
+
+  File                              Description
+  --------------------------------  ----------------------------------------
+  README.md                         Setup, OAuth, deployment guide
+  docs/TECHNICAL_REPORT.md          Full analytical narrative (Markdown)
+  01_PRD.md                         Product requirements (source for Section 2)
+  02_TECH_STACK.md                  Approved technology choices
+  03_RULES_AND_REGULATIONS.md       Mandatory engineering rules
+  04_SYSTEM_DESIGN.md               Component architecture design
+  LOGGER.md                         Engineering decision log
+  analysis/pipeline.py              Python scoring pipeline
+  analysis/test_outputs.py          Output validation
+  analysis/copy_to_app.js           Build-time JSON copy script
+  app/app/app/methodology/page.tsx  In-app methodology UI
+  app/lib/data/*.json               Deployed analytical datasets
+  app/lib/types.ts                  TypeScript data interfaces
+  app/middleware.ts                 Route protection
+
+
+================================================================================
+  END OF TECHNICAL REPORT
+================================================================================
