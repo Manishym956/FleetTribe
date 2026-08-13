@@ -79,7 +79,7 @@ export default function VehicleHealthPreview({ vehicles }: VehicleHealthPreviewP
         {/* Preview container */}
         <div className="preview-card overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[2.5rem_1fr_6rem_8rem_5rem_5rem] gap-3 px-5 py-3 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)]">
+          <div className="grid grid-cols-[2.5rem_1fr_6rem_8rem_5rem_5rem] gap-3 px-5 py-3 border-b border-border ft-surface-header">
             {["#", "Vehicle", "Health", "Status", "Vibration", "Gyro"].map((h) => (
               <p key={h} className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.07em] uppercase">
                 {h}
@@ -92,14 +92,14 @@ export default function VehicleHealthPreview({ vehicles }: VehicleHealthPreviewP
             {filtered.map((v) => (
               <li
                 key={v.Vehicle_ID}
-                className={`grid grid-cols-[2.5rem_1fr_6rem_8rem_5rem_5rem] gap-3 items-center px-5 py-3.5 border-b border-[oklch(0.93_0_0)] last:border-0 hover:bg-[oklch(0.975_0_0)] transition-colors duration-100 ${v.rank === 1 ? "bg-[oklch(0.995_0.004_25)]" : "bg-white"}`}
+                className={`grid grid-cols-[2.5rem_1fr_6rem_8rem_5rem_5rem] gap-3 items-center px-5 py-3.5 border-b border-border/50 last:border-0 transition-colors duration-100 ft-surface-row ${v.rank === 1 ? "ft-surface-row-highlight" : ""}`}
               >
                 <span className="text-[12px] font-bold text-muted-foreground/50 tabular-nums">{v.rank}</span>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold truncate">{v.Make} {v.Model}</p>
+                  <p className="text-[13px] font-semibold truncate text-foreground">{v.Make} {v.Model}</p>
                   <p className="text-[11px] text-muted-foreground">{v.Vehicle_ID}</p>
                 </div>
-                <span className="text-[15px] font-bold tabular-nums">{Math.round(v.health_score)}</span>
+                <span className="text-[15px] font-bold tabular-nums text-foreground">{Math.round(v.health_score)}</span>
                 <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full w-fit ${getHealthBadgeClass(v.health_status)}`}>
                   {v.health_status === "Maintenance Attention" ? "Attention" : v.health_status}
                 </span>

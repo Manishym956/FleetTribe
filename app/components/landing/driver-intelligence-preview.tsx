@@ -78,7 +78,7 @@ export default function DriverIntelligencePreview({ drivers }: DriverIntelligenc
         {/* Preview container */}
         <div className="preview-card overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[2.5rem_1fr_6rem_7rem_4rem_4rem_4rem_4rem] gap-3 px-5 py-3 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)]">
+          <div className="grid grid-cols-[2.5rem_1fr_6rem_7rem_4rem_4rem_4rem_4rem] gap-3 px-5 py-3 border-b border-border ft-surface-header">
             {["#", "Driver", "Risk", "Level", "Speed", "Accel", "Gyro", "Var"].map((h) => (
               <p key={h} className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.07em] uppercase">
                 {h}
@@ -91,14 +91,14 @@ export default function DriverIntelligencePreview({ drivers }: DriverIntelligenc
             {filtered.map((d, i) => (
               <li
                 key={d.Driver_ID}
-                className={`grid grid-cols-[2.5rem_1fr_6rem_7rem_4rem_4rem_4rem_4rem] gap-3 items-center px-5 py-3.5 border-b border-[oklch(0.93_0_0)] last:border-0 hover:bg-[oklch(0.975_0_0)] transition-colors duration-100 ${d.rank === 1 ? "bg-[oklch(0.995_0.004_25)]" : "bg-white"}`}
+                className={`grid grid-cols-[2.5rem_1fr_6rem_7rem_4rem_4rem_4rem_4rem] gap-3 items-center px-5 py-3.5 border-b border-border/50 last:border-0 transition-colors duration-100 ft-surface-row ${d.rank === 1 ? "ft-surface-row-highlight" : ""}`}
               >
                 <span className="text-[12px] font-bold text-muted-foreground/50 tabular-nums">{d.rank}</span>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold truncate">{d.Driver_Name}</p>
+                  <p className="text-[13px] font-semibold truncate text-foreground">{d.Driver_Name}</p>
                   <p className="text-[11px] text-muted-foreground">{d.Driver_ID}</p>
                 </div>
-                <span className="text-[15px] font-bold tabular-nums">{Math.round(d.risk_score)}</span>
+                <span className="text-[15px] font-bold tabular-nums text-foreground">{Math.round(d.risk_score)}</span>
                 <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full w-fit ${getRiskBadgeClass(d.risk_level)}`}>
                   {d.risk_level === "High Risk" ? "High" : d.risk_level === "Low Risk" ? "Low" : "Moderate"}
                 </span>

@@ -84,6 +84,34 @@ const LIMITATIONS = [
   "Gyroscope magnitude represents angular velocity (dps), not angular acceleration — documented explicitly.",
 ];
 
+const DATASET_USE_CASES = [
+  {
+    title: "Predictive Maintenance",
+    supported: "Current sensor variance and vibration anomaly indices flag vehicles with abnormal physical behaviour for inspection priority.",
+    needed: "Historical failure labels, maintenance records, and multi-week telemetry to train supervised failure models.",
+  },
+  {
+    title: "Driver Coaching",
+    supported: "Per-driver risk scores, component breakdowns, and top contributing factors enable targeted coaching conversations.",
+    needed: "Coaching outcome tracking and before/after trip comparisons to measure intervention effectiveness.",
+  },
+  {
+    title: "Accident / Crash-Risk Modelling",
+    supported: "Fleet-relative behavioural risk scoring provides a proxy signal for aggressive or unstable driving patterns.",
+    needed: "Labelled accident or near-miss outcomes — not present in the current dataset.",
+  },
+  {
+    title: "Fleet Optimization",
+    supported: "Trip counts, hub assignments, and vehicle–driver pairings support workload and assignment analysis.",
+    needed: "Operational cost data, route maps, and demand forecasts for full optimization modelling.",
+  },
+  {
+    title: "Insurance & Operational Risk Analytics",
+    supported: "Explainable, fleet-normalized scores with documented methodology support underwriting and fleet risk reporting.",
+    needed: "Claims history, premium data, and external benchmark fleets for calibration.",
+  },
+];
+
 export default function MethodologyPage() {
   return (
     <div className="px-8 py-8 max-w-4xl">
@@ -167,13 +195,35 @@ export default function MethodologyPage() {
       </div>
 
       {/* Limitations */}
-      <div className="mb-8">
+      <div className="mb-10">
         <h2 className="text-[13px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">Limitations</h2>
         <div className="ft-card overflow-hidden divide-y divide-border">
           {LIMITATIONS.map((l, i) => (
             <div key={i} className="flex gap-3 px-5 py-4">
               <span className="shrink-0 text-[10.5px] font-bold text-[oklch(0.50_0.19_25)] mt-0.5">LIMIT</span>
               <p className="text-[13px] text-foreground/80 leading-relaxed">{l}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Additional dataset use cases */}
+      <div className="mb-8">
+        <h2 className="text-[13px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">Additional Dataset Use Cases</h2>
+        <div className="space-y-4">
+          {DATASET_USE_CASES.map((uc) => (
+            <div key={uc.title} className="ft-card p-5">
+              <h3 className="text-[14px] font-semibold mb-3">{uc.title}</h3>
+              <div className="space-y-2.5">
+                <p className="text-[13px] text-foreground/85 leading-relaxed">
+                  <span className="font-semibold text-foreground">Supported now: </span>
+                  {uc.supported}
+                </p>
+                <p className="text-[13px] text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground/80">Additional data needed: </span>
+                  {uc.needed}
+                </p>
+              </div>
             </div>
           ))}
         </div>

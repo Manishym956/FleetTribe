@@ -35,7 +35,7 @@ function AnimatedBar({ score, delay = 0 }: { score: number; delay?: number }) {
     : "oklch(0.48 0.15 145)";
 
   return (
-    <div className="h-1.5 bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+    <div className="h-1.5 ft-bar-track rounded-full overflow-hidden">
       <div ref={barRef} className="h-full rounded-full" style={{ background: color }} />
     </div>
   );
@@ -248,12 +248,9 @@ export function Footer() {
             ))}
           </nav>
         </div>
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row justify-between gap-2">
+        <div className="mt-10 pt-6 border-t border-border">
           <p className="text-[12px] text-muted-foreground">
             © 2024 FleetTribe
-          </p>
-          <p className="text-[12px] text-muted-foreground">
-            VexarDrive Technologies — Data Science Intern Assignment
           </p>
         </div>
       </div>

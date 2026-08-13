@@ -20,7 +20,7 @@ function ScoreBar({ score, level }: { score: number; level: string }) {
       ? "oklch(0.48 0.15 145)"
       : "oklch(0.62 0.14 55)";
   return (
-    <div className="h-[3px] w-full bg-[oklch(0.93_0_0)] rounded-full overflow-hidden">
+    <div className="h-[3px] w-full ft-bar-track rounded-full overflow-hidden">
       <div
         className="h-full rounded-full"
         style={{ width: `${Math.min(score, 100)}%`, background: color }}
@@ -40,19 +40,19 @@ function ProductPreview({
   return (
     <div className="preview-card w-full max-w-3xl mx-auto overflow-hidden select-none">
       {/* Window chrome */}
-      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[oklch(0.91_0_0)] bg-[oklch(0.985_0_0)]">
-        <span className="w-2.5 h-2.5 rounded-full bg-[oklch(0.85_0_0)]" aria-hidden="true" />
-        <span className="w-2.5 h-2.5 rounded-full bg-[oklch(0.85_0_0)]" aria-hidden="true" />
-        <span className="w-2.5 h-2.5 rounded-full bg-[oklch(0.85_0_0)]" aria-hidden="true" />
+      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border ft-surface-header">
+        <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+        <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+        <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" aria-hidden="true" />
         <div className="flex-1 flex justify-center">
-          <div className="px-3 py-0.5 rounded bg-[oklch(0.93_0_0)] text-[11px] font-medium text-muted-foreground tracking-wide">
+          <div className="px-3 py-0.5 rounded bg-muted text-[11px] font-medium text-muted-foreground tracking-wide">
             FleetTribe — Fleet Overview
           </div>
         </div>
       </div>
 
       {/* KPI bar */}
-      <div className="grid grid-cols-4 divide-x divide-[oklch(0.92_0_0)] border-b border-[oklch(0.92_0_0)] bg-white">
+      <div className="grid grid-cols-4 divide-x divide-border border-b border-border bg-card">
         {[
           { label: "Drivers", value: "30" },
           { label: "Vehicles", value: "30" },
@@ -71,10 +71,10 @@ function ProductPreview({
       </div>
 
       {/* Two-column data area */}
-      <div className="grid md:grid-cols-2 divide-x divide-[oklch(0.92_0_0)] bg-white">
+      <div className="grid md:grid-cols-2 divide-x divide-border bg-card">
         {/* Driver risk */}
         <div>
-          <div className="px-5 py-3 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)]">
+          <div className="px-5 py-3 border-b border-border ft-surface-header">
             <p className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">
               Driver Risk · Top 5
             </p>
@@ -83,7 +83,7 @@ function ProductPreview({
             {topDrivers.slice(0, 5).map((d, i) => (
               <li
                 key={d.Driver_ID}
-                className={`px-5 py-3 ${i < 4 ? "border-b border-[oklch(0.93_0_0)]" : ""} ${i === 0 ? "bg-[oklch(0.995_0.005_25)]" : ""}`}
+                className={`px-5 py-3 ${i < 4 ? "border-b border-border" : ""} ${i === 0 ? "ft-surface-row-highlight" : ""}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -107,7 +107,7 @@ function ProductPreview({
 
         {/* Vehicle health */}
         <div>
-          <div className="px-5 py-3 border-b border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)]">
+          <div className="px-5 py-3 border-b border-border ft-surface-header">
             <p className="text-[10.5px] font-semibold text-muted-foreground tracking-[0.08em] uppercase">
               Vehicle Health · Top 5
             </p>
@@ -116,7 +116,7 @@ function ProductPreview({
             {topVehicles.slice(0, 5).map((v, i) => (
               <li
                 key={v.Vehicle_ID}
-                className={`px-5 py-3 ${i < 4 ? "border-b border-[oklch(0.93_0_0)]" : ""} ${i === 0 ? "bg-[oklch(0.995_0.005_25)]" : ""}`}
+                className={`px-5 py-3 ${i < 4 ? "border-b border-border" : ""} ${i === 0 ? "ft-surface-row-highlight" : ""}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -140,10 +140,7 @@ function ProductPreview({
       </div>
 
       {/* Bottom bar */}
-      <div className="px-5 py-2.5 border-t border-[oklch(0.92_0_0)] bg-[oklch(0.985_0_0)] flex items-center justify-between">
-        <p className="text-[11px] text-muted-foreground">
-          VexarDrive Technologies · Data Science Intern Assignment
-        </p>
+      <div className="px-5 py-2.5 border-t border-border ft-surface-header flex items-center justify-end">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.55_0.15_145)] inline-block" />
           <p className="text-[11px] text-muted-foreground">Live</p>
@@ -177,28 +174,15 @@ export default function Hero({ topDrivers, topVehicles }: HeroProps) {
     <section
       id="hero"
       aria-label="Hero"
-      className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-24 px-6 overflow-hidden bg-background"
+      className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-24 px-6 overflow-hidden"
     >
       {/* Dot-grid texture */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(oklch(0.86 0 0) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-          opacity: 0.5,
-        }}
+        className="absolute inset-0 pointer-events-none hero-dot-grid"
         aria-hidden="true"
       />
 
       <div ref={containerRef} className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center gap-7 text-center">
-        {/* Context label */}
-        <div data-fade className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 bg-background/60 backdrop-blur-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-foreground/25 inline-block" />
-          <span className="text-[11.5px] font-medium text-muted-foreground tracking-wide">
-            VexarDrive Technologies — Data Science Intern Assignment
-          </span>
-        </div>
-
         {/* Headline */}
         <h1 data-fade className="text-[52px] sm:text-[64px] md:text-[76px] font-bold tracking-[-0.035em] leading-[1.02] max-w-3xl text-balance">
           Turn Fleet Telemetry{" "}

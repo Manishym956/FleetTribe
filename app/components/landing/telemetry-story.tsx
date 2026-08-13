@@ -164,7 +164,7 @@ function RiskScoringPanel({ driver }: { driver: DriverFeature }) {
                   : "border-border bg-muted"
               }`}
             >
-              <p className="text-[13.5px] font-semibold">{step.label}</p>
+              <p className="text-[13.5px] font-semibold text-foreground">{step.label}</p>
               <p className={`text-[11.5px] mt-0.5 ${i === steps.length - 1 ? "opacity-70" : "text-muted-foreground"}`}>
                 {step.sub}
               </p>
@@ -338,23 +338,41 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
   const steps = getSteps(topDriver, topVehicle);
   const [activeStep, setActiveStep] = useState(0);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const leftColumnRef = useRef<HTMLDivElement>(null);
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
   const pinTargetRef = useRef<HTMLDivElement>(null);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileStepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const leftTextRef = useRef<HTMLDivElement>(null);
-  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const gsapCtx = useRef<{ revert: () => void } | null>(null);
-  const prevStepRef = useRef(0);
+  const storyPinTrigger = useRef<ReturnType<typeof import("gsap/ScrollTrigger").ScrollTrigger.create> | null>(null);
   const reducedMotion = useRef(false);
-  const isFirstTextRender = useRef(true);
+  const activeStepRef = useRef(0);
+
+  const scrollDuration = () =>
+    typeof window !== "undefined" ? window.innerHeight * 2.2 : 1600;
 
   const goToStep = useCallback((i: number) => {
-    setActiveStep(i);
-    const el = stepRefs.current[i];
-    el?.scrollIntoView({ behavior: reducedMotion.current ? "auto" : "smooth", block: "center" });
-  }, []);
+    const clamped = Math.max(0, Math.min(steps.length - 1, i));
+    activeStepRef.current = clamped;
+    setActiveStep(clamped);
 
-  // GSAP ScrollTrigger setup (desktop pin + step triggers)
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      const st = storyPinTrigger.current;
+      if (st) {
+        const progress = (clamped + 0.5) / steps.length;
+        const y = st.start + progress * (st.end - st.start);
+        window.scrollTo({
+          top: y,
+          behavior: reducedMotion.current ? "auto" : "smooth",
+        });
+        return;
+      }
+    }
+
+    const el = mobileStepRefs.current[clamped];
+    el?.scrollIntoView({ behavior: reducedMotion.current ? "auto" : "smooth", block: "center" });
+  }, [steps.length]);
+
+  // GSAP ScrollTrigger — desktop pin + progress-based steps; mobile per-card triggers
   useEffect(() => {
     let cancelled = false;
 
@@ -370,40 +388,48 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
         const mm = gsap.matchMedia();
 
         mm.add("(min-width: 768px)", () => {
-          if (pinTargetRef.current && leftColumnRef.current) {
-            ScrollTrigger.create({
-              trigger: leftColumnRef.current,
-              start: "top top+=7rem",
-              end: "bottom bottom",
-              pin: pinTargetRef.current,
-              pinSpacing: true,
-              invalidateOnRefresh: true,
-            });
-          }
+          const track = scrollTrackRef.current;
+          const pin = pinTargetRef.current;
+          if (!track || !pin) return;
 
-          steps.forEach((_, i) => {
-            const el = stepRefs.current[i];
-            if (!el) return;
-            ScrollTrigger.create({
-              trigger: el,
-              start: "top 55%",
-              end: "bottom 45%",
-              onEnter: () => setActiveStep(i),
-              onEnterBack: () => setActiveStep(i),
-            });
+          storyPinTrigger.current = ScrollTrigger.create({
+            id: "story-pin",
+            trigger: track,
+            start: "top top+=9rem",
+            end: () => `+=${scrollDuration()}`,
+            pin,
+            pinSpacing: true,
+            invalidateOnRefresh: true,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              const index = Math.min(
+                steps.length - 1,
+                Math.max(0, Math.floor(self.progress * steps.length))
+              );
+              if (index !== activeStepRef.current) {
+                activeStepRef.current = index;
+                setActiveStep(index);
+              }
+            },
           });
         });
 
         mm.add("(max-width: 767px)", () => {
           steps.forEach((_, i) => {
-            const el = stepRefs.current[i];
+            const el = mobileStepRefs.current[i];
             if (!el) return;
             ScrollTrigger.create({
               trigger: el,
-              start: "top 60%",
-              end: "bottom 40%",
-              onEnter: () => setActiveStep(i),
-              onEnterBack: () => setActiveStep(i),
+              start: "top 65%",
+              end: "bottom 35%",
+              onEnter: () => {
+                activeStepRef.current = i;
+                setActiveStep(i);
+              },
+              onEnterBack: () => {
+                activeStepRef.current = i;
+                setActiveStep(i);
+              },
             });
           });
         });
@@ -415,108 +441,18 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
     loadGSAP();
     return () => {
       cancelled = true;
+      storyPinTrigger.current = null;
       gsapCtx.current?.revert();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [steps.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Float-in animation for sticky left text when step changes
+  // Keep left text visible (no GSAP opacity tricks)
   useEffect(() => {
-    let cancelled = false;
-
-    const animateLeftText = async () => {
-      const el = leftTextRef.current;
-      if (!el || cancelled) return;
-
-      if (isFirstTextRender.current) {
-        isFirstTextRender.current = false;
-        el.style.opacity = "1";
-        el.style.transform = "translateY(0)";
-        return;
-      }
-
-      if (reducedMotion.current) {
-        el.style.opacity = "1";
-        el.style.transform = "translateY(0)";
-        return;
-      }
-
-      const { gsap } = await import("gsap");
-      gsap.fromTo(
-        el,
-        { opacity: 0, y: 32 },
-        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", overwrite: true }
-      );
-    };
-
-    animateLeftText();
-    return () => {
-      cancelled = true;
-    };
+    const el = leftTextRef.current;
+    if (!el) return;
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
   }, [activeStep]);
-
-  // Panel crossfade on step change
-  useEffect(() => {
-    let cancelled = false;
-
-    const animatePanels = async () => {
-      const { gsap } = await import("gsap");
-      if (cancelled) return;
-
-      const next = panelRefs.current[activeStep];
-      if (!next) return;
-
-      panelRefs.current.forEach((el, i) => {
-        if (!el || i === activeStep) return;
-        el.style.pointerEvents = "none";
-        el.style.visibility = "hidden";
-        el.style.opacity = "0";
-        el.style.zIndex = "1";
-      });
-
-      if (reducedMotion.current) {
-        next.style.opacity = "1";
-        next.style.visibility = "visible";
-        next.style.pointerEvents = "auto";
-        next.style.zIndex = "2";
-        prevStepRef.current = activeStep;
-        return;
-      }
-
-      next.style.visibility = "visible";
-      next.style.zIndex = "2";
-      gsap.fromTo(
-        next,
-        { opacity: 0, y: 6 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.35,
-          ease: "power2.out",
-          onStart: () => {
-            next.style.pointerEvents = "auto";
-          },
-        }
-      );
-
-      prevStepRef.current = activeStep;
-    };
-
-    animatePanels();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeStep]);
-
-  // Initial panel state
-  useEffect(() => {
-    panelRefs.current.forEach((el, i) => {
-      if (!el) return;
-      el.style.opacity = i === 0 ? "1" : "0";
-      el.style.visibility = i === 0 ? "visible" : "hidden";
-      el.style.pointerEvents = i === 0 ? "auto" : "none";
-      el.style.zIndex = i === 0 ? "2" : "1";
-    });
-  }, []);
 
   const currentStep = steps[activeStep];
 
@@ -525,7 +461,7 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
       id="story"
       ref={sectionRef}
       aria-label="How FleetTribe works"
-      className="relative"
+      className="relative scroll-mt-28"
     >
       <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
         <p className="section-label mb-3">How it works</p>
@@ -536,13 +472,13 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
       </div>
 
       {/* Desktop: pinned storytelling */}
-      <div className="hidden md:block max-w-6xl mx-auto px-6 pb-48">
-        <div ref={leftColumnRef}>
-          {/* Pinned row: left text + right panel stay fixed while spacers scroll */}
-          <div ref={pinTargetRef} className="flex gap-16 xl:gap-20 items-start">
+      <div className="hidden md:block max-w-6xl mx-auto px-6 pb-12">
+        <div ref={scrollTrackRef}>
+          {/* Pinned row: left text + right panel — scroll distance set in GSAP `end` */}
+          <div ref={pinTargetRef} className="flex gap-16 xl:gap-20 items-start z-[1] pt-2">
             {/* Left: active step text */}
             <div className="w-[40%] shrink-0 pt-4">
-              <div ref={leftTextRef} key={activeStep}>
+              <div ref={leftTextRef}>
                 <p className="text-[11px] font-semibold tracking-[0.08em] uppercase mb-2 text-muted-foreground">
                   {currentStep.num}
                 </p>
@@ -586,10 +522,11 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
                     {steps.map((step, i) => (
                       <div
                         key={step.num}
-                        ref={(el) => {
-                          panelRefs.current[i] = el;
-                        }}
-                        className="absolute inset-0 px-7 py-7 overflow-auto text-foreground"
+                        className={`absolute inset-0 px-7 py-7 overflow-auto text-foreground transition-opacity duration-300 ${
+                          activeStep === i
+                            ? "opacity-100 visible z-[2]"
+                            : "opacity-0 invisible pointer-events-none z-[1]"
+                        }`}
                         aria-hidden={activeStep !== i}
                       >
                         {step.panel}
@@ -600,19 +537,6 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
               </div>
             </div>
           </div>
-
-          {/* Scroll trigger spacers — drive step changes while row stays pinned */}
-          {steps.map((step, i) => (
-            <div
-              key={step.num}
-              ref={(el) => {
-                stepRefs.current[i] = el;
-              }}
-              className="py-[4.5rem] min-h-[280px] cursor-pointer"
-              onClick={() => goToStep(i)}
-              aria-hidden="true"
-            />
-          ))}
         </div>
       </div>
 
@@ -622,7 +546,7 @@ export default function TelemetryStory({ topDriver, topVehicle }: TelemetryStory
           <div
             key={step.num}
             ref={(el) => {
-              stepRefs.current[i] = el;
+              mobileStepRefs.current[i] = el;
             }}
             className="preview-card overflow-hidden"
           >

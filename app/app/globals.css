@@ -322,8 +322,15 @@
     border-color: var(--border);
   }
 
+  .hero-dot-grid {
+    background-image: radial-gradient(color-mix(in oklch, var(--foreground) 12%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.45;
+  }
+
   .story-panel-inset {
-    background: color-mix(in oklch, var(--muted) 60%, var(--card));
+    background: var(--muted);
+    color: var(--foreground);
   }
 
   /* Risk badge colours */
