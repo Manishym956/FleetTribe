@@ -1,0 +1,23 @@
+{
+  "product": "FleetTribe",
+  "scoring_formulas": {
+    "acceleration_magnitude": "sqrt(Accel_X_g^2 + Accel_Y_g^2 + Accel_Z_g^2)",
+    "dynamic_acceleration": "abs(acceleration_magnitude - 1.0)",
+    "gyroscope_magnitude": "sqrt(Gyro_X_dps^2 + Gyro_Y_dps^2 + Gyro_Z_dps^2)"
+  },
+  "scoring_weights_baseline": {
+    "speed": 0.35,
+    "acceleration": 0.3,
+    "gyro": 0.25,
+    "variability": 0.1
+  },
+  "thresholds_hypotheses": {
+    "harsh_acceleration_g": 0.3,
+    "high_gyro_dps": 30.0
+  },
+  "normalization": {
+    "method": "Robust Z-score using Median and MAD",
+    "formula": "robust_z = 0.6745 * (x - median) / MAD",
+    "scaling": "Z-scores clipped to [-2.0, 3.0] and mapped to [0, 100]"
+  }
+}

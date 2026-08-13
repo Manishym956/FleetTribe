@@ -1,0 +1,194 @@
+{
+  "total_drivers": 30,
+  "total_vehicles": 30,
+  "total_trips": 450,
+  "total_distance_km": 6151.679999999999,
+  "avg_driver_risk_score": 41.78271829737734,
+  "avg_vehicle_health_score": 58.18100295596204,
+  "drivers_by_risk_level": {
+    "Moderate Risk": 22,
+    "High Risk": 4,
+    "Low Risk": 4
+  },
+  "vehicles_by_health_status": {
+    "Monitor": 19,
+    "Maintenance Attention": 10,
+    "Healthy": 1
+  },
+  "highest_risk_drivers": [
+    {
+      "Driver_ID": "D19",
+      "Driver_Name": "Senthil Pillai",
+      "risk_score": 76.52301860025577,
+      "risk_level": "High Risk",
+      "explanation": "Senthil Pillai is classified as High Risk (Score: 77/100). The risk profile is primarily influenced by elevated Acceleration Volatility and Behavioural Variability relative to the rest of the fleet."
+    },
+    {
+      "Driver_ID": "D23",
+      "Driver_Name": "Kavya Pillai",
+      "risk_score": 61.95595294295024,
+      "risk_level": "High Risk",
+      "explanation": "Kavya Pillai is classified as High Risk (Score: 62/100). The risk profile is primarily influenced by elevated Acceleration Volatility and Speed Profile relative to the rest of the fleet."
+    },
+    {
+      "Driver_ID": "D24",
+      "Driver_Name": "Lakshmi Iyer",
+      "risk_score": 60.492257560524706,
+      "risk_level": "High Risk",
+      "explanation": "Lakshmi Iyer is classified as High Risk (Score: 60/100). The risk profile is primarily influenced by elevated Speed Profile and Gyroscope Volatility relative to the rest of the fleet."
+    },
+    {
+      "Driver_ID": "D14",
+      "Driver_Name": "Rajesh Subramaniam",
+      "risk_score": 60.104759087606865,
+      "risk_level": "High Risk",
+      "explanation": "Rajesh Subramaniam is classified as High Risk (Score: 60/100). The risk profile is primarily influenced by elevated Speed Profile and Behavioural Variability relative to the rest of the fleet."
+    },
+    {
+      "Driver_ID": "D25",
+      "Driver_Name": "Deepa Pillai",
+      "risk_score": 55.963914765767484,
+      "risk_level": "Moderate Risk",
+      "explanation": "Deepa Pillai is classified as Moderate Risk (Score: 56/100). The risk profile is primarily influenced by elevated Acceleration Volatility and Behavioural Variability relative to the rest of the fleet."
+    }
+  ],
+  "vehicles_requiring_attention": [
+    {
+      "Vehicle_ID": "V19",
+      "Make": "TVS",
+      "Model": "Ntorq",
+      "health_score": 19.49426664866266,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V19 exhibits an abnormal sensor signature (Health Score: 19/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V02",
+      "Make": "TVS",
+      "Model": "Raider",
+      "health_score": 32.829596341209836,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V02 exhibits an abnormal sensor signature (Health Score: 33/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V25",
+      "Make": "Suzuki",
+      "Model": "Access",
+      "health_score": 34.87725067241121,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V25 exhibits an abnormal sensor signature (Health Score: 35/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V13",
+      "Make": "Bajaj",
+      "Model": "Pulsar",
+      "health_score": 35.923610522422265,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V13 exhibits an abnormal sensor signature (Health Score: 36/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V23",
+      "Make": "Suzuki",
+      "Model": "Access",
+      "health_score": 38.086641567058564,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V23 exhibits an abnormal sensor signature (Health Score: 38/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V14",
+      "Make": "TVS",
+      "Model": "Raider",
+      "health_score": 38.26489585741046,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V14 exhibits an abnormal sensor signature (Health Score: 38/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V12",
+      "Make": "TVS",
+      "Model": "Ntorq",
+      "health_score": 44.592435494423945,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V12 exhibits an abnormal sensor signature (Health Score: 45/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V24",
+      "Make": "Honda",
+      "Model": "Activa",
+      "health_score": 48.01604704035593,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V24 exhibits an abnormal sensor signature (Health Score: 48/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V15",
+      "Make": "TVS",
+      "Model": "Ntorq",
+      "health_score": 48.79152873232779,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V15 exhibits an abnormal sensor signature (Health Score: 49/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    },
+    {
+      "Vehicle_ID": "V01",
+      "Make": "Yamaha",
+      "Model": "Ray ZR",
+      "health_score": 49.961174025904604,
+      "health_status": "Maintenance Attention",
+      "explanation": "Vehicle V01 exhibits an abnormal sensor signature (Health Score: 50/100) characterized by elevated sensor anomalies. It is flagged as high inspection priority."
+    }
+  ],
+  "sensitivity_analysis": [
+    {
+      "run": 1,
+      "weights_perturbed": {
+        "speed": 0.4,
+        "acceleration": 0.25,
+        "gyro": 0.25,
+        "variability": 0.1
+      },
+      "spearman_rank_correlation": 0.9746384872080088,
+      "avg_rank_shift": 1.4
+    },
+    {
+      "run": 2,
+      "weights_perturbed": {
+        "speed": 0.3,
+        "acceleration": 0.35,
+        "gyro": 0.25,
+        "variability": 0.1
+      },
+      "spearman_rank_correlation": 0.9790878754171303,
+      "avg_rank_shift": 1.2
+    },
+    {
+      "run": 3,
+      "weights_perturbed": {
+        "speed": 0.35,
+        "acceleration": 0.25,
+        "gyro": 0.3,
+        "variability": 0.1
+      },
+      "spearman_rank_correlation": 0.9830923248053391,
+      "avg_rank_shift": 1.1333333333333333
+    },
+    {
+      "run": 4,
+      "weights_perturbed": {
+        "speed": 0.35,
+        "acceleration": 0.3,
+        "gyro": 0.2,
+        "variability": 0.15
+      },
+      "spearman_rank_correlation": 0.9799777530589545,
+      "avg_rank_shift": 1.2666666666666666
+    },
+    {
+      "run": 5,
+      "weights_perturbed": {
+        "speed": 0.3,
+        "acceleration": 0.3,
+        "gyro": 0.3,
+        "variability": 0.1
+      },
+      "spearman_rank_correlation": 0.9879866518353726,
+      "avg_rank_shift": 0.8
+    }
+  ]
+}
