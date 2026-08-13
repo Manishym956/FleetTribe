@@ -25,8 +25,13 @@ export function generateStaticParams() {
   return drivers.map((d) => ({ driverId: d.Driver_ID }));
 }
 
-export default function DriverDetailPage({ params }: { params: { driverId: string } }) {
-  const driver = drivers.find((d) => d.Driver_ID === params.driverId);
+export default async function DriverDetailPage({
+  params,
+}: {
+  params: Promise<{ driverId: string }>;
+}) {
+  const { driverId } = await params;
+  const driver = drivers.find((d) => d.Driver_ID === driverId);
   if (!driver) notFound();
 
   const vehicle = vehicles.find((v) => v.Vehicle_ID === driver.Primary_Vehicle_ID);
@@ -154,9 +159,9 @@ export default function DriverDetailPage({ params }: { params: { driverId: strin
         </div>
       </div>
 
-      {/* Why this matters */}
+      {/* Analysis explanation */}
       <div className="ft-card p-6 mb-5">
-        <h2 className="text-[12.5px] font-semibold mb-3 tracking-[-0.01em]">Why This Matters</h2>
+        <h2 className="text-[12.5px] font-semibold mb-3 tracking-[-0.01em]">Analysis Explanation</h2>
         <p className="text-[14px] text-muted-foreground leading-relaxed">{driver.explanation}</p>
         {driver.top_factors.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">

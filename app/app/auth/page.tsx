@@ -11,6 +11,7 @@ function AuthContent() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const setupRequired = searchParams.get("setup") === "required";
+  const nextPath = searchParams.get("next") || "/app";
   const configured = isSupabaseConfigured();
 
   const handleGoogleSignIn = async () => {
@@ -22,9 +23,11 @@ function AuthContent() {
     setError("");
     try {
       const supabase = createClient();
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("next", nextPath);
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callbackUrl.toString() },
       });
       if (signInError) {
         setError(signInError.message);
